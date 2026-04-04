@@ -160,6 +160,25 @@ After each implementation step:
 
 **Plus:** working deployed project with tests, Docker, and CI/CD.
 
+### Route B (Planning Only) produces:
+
+**6 Documents:**
+- `STRATEGIC_PLAN.md` — strategy, competitors, budget, KPIs, risks
+- `PROJECT_ARCHITECTURE.md` — DB schema, API endpoints, auth flow, infrastructure
+- `IMPLEMENTATION_PLAN.md` — 8-12 steps with specific files and verification
+- `PRD.md` — user stories, requirements (P0/P1/P2), kill criteria
+- `README.md` — quick start guide
+- `CLAUDE_CODE_GUIDE.md` — copy-paste prompts for each step
+
+**Plus:** `CLAUDE.md` (project memory) and `.gitignore`. No code is written. You can review the plan, share it with a client or team, and later switch to route A to start implementation.
+
+### Route C (Have Docs Already) produces:
+
+**1 Document:**
+- `CLAUDE_CODE_GUIDE.md` — step-by-step prompts based on your existing documentation
+
+Takes your existing architecture, plan, and requirements — and converts them into ready-to-use prompts. You copy a prompt, paste it into Claude Code, get the result, and move to the next step. Full manual control over every stage.
+
 ## Recommended Models
 
 | Skill | Minimum | Recommended |
