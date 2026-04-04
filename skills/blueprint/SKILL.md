@@ -3,6 +3,7 @@ name: blueprint
 description: Generate complete project documentation set (6 files) — strategic plan, architecture, implementation plan, PRD, README, Claude Code guide. Planning only, no code. Use when user says "спланируй проект", "создай документацию для проекта", "подготовь blueprint", or needs project planning without coding.
 argument-hint: project idea or description
 license: MIT
+effort: high
 metadata:
   author: HiH-DimaN
   version: 1.0.0
@@ -86,3 +87,32 @@ Architecture is the source of truth. If PRD conflicts with architecture, update 
 - Используй стек пользователя из CLAUDE.md когда применимо
 - Каждый документ ссылается на другие
 - Не генерируй код — только документацию
+
+
+### Step 6: Self-validation
+
+Before showing the final result, verify minimum quality:
+
+**Minimum requirements for STRATEGIC_PLAN.md:**
+- At least 3 competitors analyzed
+- Budget estimation present
+- At least 3 risks identified
+
+**Minimum requirements for PROJECT_ARCHITECTURE.md:**
+- At least 3 database tables with fields and types
+- At least 5 API endpoints with methods and paths
+- Auth mechanism described (not just "JWT")
+- Deployment target specified
+
+**Minimum requirements for IMPLEMENTATION_PLAN.md:**
+- At least 6 steps
+- Each step has specific files listed
+- Each step has verification command
+
+**Minimum requirements for PRD.md:**
+- At least 5 user stories
+- P0/P1/P2 priorities assigned
+- Acceptance criteria for P0 stories
+
+If any requirement is not met, fix it before presenting to the user. If you cannot meet a requirement, explicitly warn the user:
+"⚠️ Внимание: [document] не соответствует минимальным требованиям качества: [reason]. Рекомендуется использовать модель Opus для лучшего результата."

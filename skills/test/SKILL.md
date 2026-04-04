@@ -3,6 +3,7 @@ name: test
 description: Generate comprehensive tests for code — unit, integration, edge cases. Detects the project's test framework and follows existing conventions. Use when user says "напиши тесты", "покрой тестами", "add tests", "test this", or needs unit, integration, or edge case tests for a file or function.
 argument-hint: file, function, or module to test
 license: MIT
+effort: medium
 metadata:
   author: HiH-DimaN
   version: 1.0.0

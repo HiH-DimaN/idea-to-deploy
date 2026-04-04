@@ -3,6 +3,7 @@ name: refactor
 description: Refactor code for better readability, maintainability, and structure. Preserves behavior while improving quality. Use when user says "отрефактори", "упрости код", "refactor this", "слишком сложный код", or needs to improve code quality without changing behavior.
 argument-hint: file, function, or area to refactor
 license: MIT
+effort: medium
 metadata:
   author: HiH-DimaN
   version: 1.0.0

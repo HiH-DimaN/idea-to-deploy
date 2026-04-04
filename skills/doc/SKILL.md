@@ -3,6 +3,7 @@ name: doc
 description: Generate documentation — README, API docs, inline comments for complex logic. Detects project style and follows existing conventions. Use when user says "напиши документацию", "создай README", "задокументируй API", "добавь комментарии", or needs docs for a file or module.
 argument-hint: file, module, or "readme" or "api"
 license: MIT
+effort: medium
 metadata:
   author: HiH-DimaN
   version: 1.0.0

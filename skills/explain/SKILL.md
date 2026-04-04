@@ -3,6 +3,7 @@ name: explain
 description: Explain how code works — architecture, data flow, key decisions. Uses ASCII diagrams and step-by-step walkthroughs. Use when user says "объясни код", "как это работает", "explain this", or needs to understand a file, function, or module.
 argument-hint: file, function, module, or concept
 license: MIT
+effort: low
 metadata:
   author: HiH-DimaN
   version: 1.0.0

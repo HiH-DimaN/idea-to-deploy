@@ -4,6 +4,7 @@ description: Generate a complete project from idea — architecture, plans, docs
 argument-hint: project idea or description
 allowed-tools: "Bash(git:*) Bash(mkdir:*) Bash(npm:*) Bash(pnpm:*) Bash(docker:*)"
 license: MIT
+effort: high
 metadata:
   author: HiH-DimaN
   version: 1.0.0
@@ -108,3 +109,21 @@ Check: missing dependencies, wrong versions, TypeScript strict mode issues. Fix 
 - Keep MVP minimal — ship fast, iterate later
 - Every phase ends with a working state
 - Update IMPLEMENTATION_PLAN.md with progress as you go
+
+
+### Quality Gate: Auto-review
+
+After Phase 2 (Documentation Generation) and before Phase 3 (Scaffolding):
+
+1. Run /review automatically on generated documents
+2. If score < 7/10 — fix critical issues before proceeding
+3. If score >= 7/10 — proceed to scaffolding
+4. Show user the review score and any warnings
+
+After Phase 4 (Implementation) for each step:
+1. Verify the step produces working code (no syntax errors)
+2. Run tests if they exist
+3. If tests fail — fix before moving to next step
+4. If 3 consecutive fixes fail — stop and ask user for guidance
+
+This prevents accumulating broken code across steps.

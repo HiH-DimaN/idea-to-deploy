@@ -3,6 +3,7 @@ name: debug
 description: Systematically debug an issue — find root cause and fix it. Traces errors through stack traces, logs, and git history. Use when user says "почини баг", "не работает", "ошибка", "debug this", or pastes an error message or stack trace.
 argument-hint: error message, symptom, or issue description
 license: MIT
+effort: medium
 metadata:
   author: HiH-DimaN
   version: 1.0.0

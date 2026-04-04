@@ -3,6 +3,7 @@ name: perf
 description: Performance analysis — find bottlenecks and optimize. Covers algorithms, database queries, memory, I/O, and caching. Use when user says "тормозит", "медленно работает", "optimize", "производительность", or needs to find and fix performance issues in code.
 argument-hint: file, function, or area to analyze
 license: MIT
+effort: medium
 metadata:
   author: HiH-DimaN
   version: 1.0.0

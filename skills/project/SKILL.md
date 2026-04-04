@@ -3,6 +3,7 @@ name: project
 description: Smart project creation router — determines the best workflow based on user needs and guides through the entire process. Single entry point for all project creation scenarios. Use when user says "хочу проект", "новый проект", "создать приложение", "сделай сервис", "build a project", or any project creation request.
 argument-hint: project idea or description
 license: MIT
+effort: medium
 metadata:
   author: HiH-DimaN
   version: 1.0.0
