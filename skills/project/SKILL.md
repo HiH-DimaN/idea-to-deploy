@@ -107,7 +107,13 @@ Actions:
 Recommend А (full cycle) — it includes planning anyway. User can stop after documentation phase if they want.
 
 ### User wants to switch scenarios mid-way
-No problem. After /blueprint (Б), user can say "начинай реализацию" → continue with /kickstart Phase 3+.
+Fully supported. The skills auto-detect existing documentation:
+
+- **Б → А**: User says "начинай реализацию" → run /kickstart. It will detect existing docs, validate with /review, skip to scaffolding/implementation.
+- **В → А**: User says "начинай реализацию" → run /kickstart. It will detect existing guide and docs, supplement if needed, then implement.
+- **В → Б**: User says "создай полную документацию" → run /blueprint. It will detect existing guide and generate missing docs consistent with it.
+
+No work is lost when switching. Existing documents are reused, not regenerated.
 
 ### Project is too complex for one pass
 Suggest splitting into MVP phases. /blueprint first, then /kickstart for Phase 1 only.

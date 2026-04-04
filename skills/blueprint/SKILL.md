@@ -18,6 +18,24 @@ metadata:
 
 ## Instructions
 
+### Step 0: Detect Existing Documentation
+
+Before generating, check if any project documents already exist:
+
+```
+Look for: STRATEGIC_PLAN.md, PROJECT_ARCHITECTURE.md, IMPLEMENTATION_PLAN.md, PRD.md, README.md, CLAUDE_CODE_GUIDE.md
+```
+
+**If some documents already exist:**
+- List found documents to the user
+- Ask: "Найдены существующие документы: [list]. Обновить их или создать заново?"
+- If update → read existing docs, improve and supplement them
+- If recreate → generate from scratch
+
+**If CLAUDE_CODE_GUIDE.md exists but other docs don't (coming from route C):**
+- Read the guide to understand project context
+- Generate missing documents consistent with the existing guide
+
 ### Step 1: Clarify the idea
 If the description is vague, ask:
 - Что делает продукт? Для кого?

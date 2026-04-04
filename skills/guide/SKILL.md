@@ -74,3 +74,12 @@ Split into sub-steps. A step should produce one commit with one testable result.
 
 ### Prompts are too vague
 Every prompt must name specific files and values. Consult `references/prompt-patterns.md` for the good vs bad prompt comparison.
+
+### Step 5: Offer next steps
+
+After generating CLAUDE_CODE_GUIDE.md, tell the user:
+
+"Гайд создан. Варианты:
+1. **Ручной режим** — откройте CLAUDE_CODE_GUIDE.md и копируйте промпты по шагам
+2. **Автоматический режим** — скажите 'начинай реализацию' и я выполню все шаги последовательно (перейду на маршрут А)
+3. **Дополнить план** — скажите 'создай полную документацию' и я сгенерирую недостающие документы (перейду на маршрут Б)"

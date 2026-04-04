@@ -17,6 +17,42 @@ metadata:
 
 ## Instructions
 
+### Phase 0: Detect Existing Documentation
+
+Before starting, check if project documentation already exists:
+
+```
+Look for these files in the current directory and docs/:
+- STRATEGIC_PLAN.md
+- PROJECT_ARCHITECTURE.md
+- IMPLEMENTATION_PLAN.md
+- PRD.md
+- CLAUDE_CODE_GUIDE.md
+- CLAUDE.md
+```
+
+**If ALL core documents exist (ARCHITECTURE + IMPLEMENTATION_PLAN + PRD):**
+- Tell the user: "Обнаружена существующая документация. Пропускаю фазы планирования и перехожу к реализации."
+- Run /review on existing documents
+- If score >= 7/10 → skip to Phase 3 (Scaffolding) or Phase 4 (Implementation) if project is already scaffolded
+- If score < 7/10 → show issues, ask: "Документация требует доработки. Исправить автоматически или хотите скорректировать вручную?"
+
+**If SOME documents exist (partial documentation):**
+- Tell the user which documents found and which are missing
+- Ask: "Дополнить недостающие документы или начать с нуля?"
+- If supplement → generate only missing documents, then proceed
+- If from scratch → proceed normally from Phase 1
+
+**If NO documents exist:**
+- Proceed normally from Phase 1
+
+**If project code already exists (src/, app/, package.json with dependencies):**
+- Tell the user: "Обнаружен существующий код. Проверяю состояние проекта."
+- Read CLAUDE.md status table if exists
+- Find the last completed step
+- Ask: "Последний завершённый шаг: [N]. Продолжить с шага [N+1]?"
+- Resume from that step
+
 ### Phase 1: Ideation and Research
 1. **Clarify the idea** — ask 3-5 key questions if vague (see `references/phase-checklist.md`)
 2. **Competitive analysis** — outline existing solutions and differentiators
