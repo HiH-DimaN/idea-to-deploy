@@ -3,9 +3,10 @@ name: guide
 description: 'Generate a CLAUDE_CODE_GUIDE.md — step-by-step copy-paste prompts for building the project from scratch via Claude Code. TRIGGER when user says "создай гайд", "сгенерируй промпты для проекта", "cookbook промптов". Assumes architecture/PRD already exist. See `## Trigger phrases` in body for full list.'
 argument-hint: project name or description
 license: MIT
+allowed-tools: Read Write Edit Glob Grep
 metadata:
   author: HiH-DimaN
-  version: 1.2.0
+  version: 1.3.0
   category: project-planning
   tags: [prompts, cookbook, claude-code-guide]
 ---
@@ -22,6 +23,13 @@ These are the user phrases (Russian and English) that should auto-invoke this sk
 - пошаговая инструкция для Claude, промпты для Claude Code
 - guide for project, cookbook, prompt sequence
 - есть документация, нужны готовые промпты к ней
+
+## Recommended model
+
+**opus** — Generates a long sequence of step-by-step prompts that must reference specific files and verification commands. Opus produces tighter, more accurate prompt sequences.
+
+Set via `/model {model}` before invoking this skill, or via the project's default model in `~/.claude/settings.json`.
+
 
 ## Instructions
 

@@ -3,11 +3,12 @@ name: perf
 description: 'Performance analysis — find bottlenecks and optimize. Covers algorithms, DB queries, memory, I/O, caching. TRIGGER when user says "тормозит", "медленно работает", "оптимизируй", "производительность", or reports slow page loads / high latency / memory issues. Measure first, optimize second. See `## Trigger phrases` in body for full list.'
 argument-hint: file, function, or area to analyze
 license: MIT
+allowed-tools: Read Edit Glob Grep Bash
 context: fork
 agent: perf-analyzer
 metadata:
   author: HiH-DimaN
-  version: 1.2.0
+  version: 1.3.0
   category: code-quality
   tags: [performance, optimization, profiling, bottleneck]
 ---
@@ -25,6 +26,13 @@ These are the user phrases (Russian and English) that should auto-invoke this sk
 - утечка памяти, memory leak, высокая нагрузка
 - optimize, make it faster, slow page load
 - любой жалобный запрос на скорость, latency, throughput
+
+## Recommended model
+
+**opus** — Bottleneck identification often requires reasoning across multiple layers (algorithm → DB index → caching → I/O). Opus catches issues Sonnet misses; perf-analyzer subagent can be Sonnet.
+
+Set via `/model {model}` before invoking this skill, or via the project's default model in `~/.claude/settings.json`.
+
 
 ## Instructions
 

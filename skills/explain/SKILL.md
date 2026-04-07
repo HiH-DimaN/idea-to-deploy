@@ -3,9 +3,10 @@ name: explain
 description: 'Explain how code works — architecture, data flow, key decisions. Uses ASCII diagrams and step-by-step walkthroughs. TRIGGER when user says "объясни код", "как это работает", "что делает эта функция", "explain this", or asks any question about how existing code works. For multi-file exploration, use this rather than reading files manually. See `## Trigger phrases` in body for full list.'
 argument-hint: file, function, module, or concept
 license: MIT
+allowed-tools: Read Glob Grep
 metadata:
   author: HiH-DimaN
-  version: 1.2.0
+  version: 1.3.0
   category: code-understanding
   tags: [code-review, architecture, learning]
 ---
@@ -23,6 +24,13 @@ These are the user phrases (Russian and English) that should auto-invoke this sk
 - walkthrough, архитектура этого, explain this, how does this work
 - multi-file/multi-module exploration
 - любой вопрос о существующем коде, не о новом
+
+## Recommended model
+
+**haiku** — Read-only walkthrough. Haiku is fast enough for most files. Use Sonnet only for very complex cross-module flows (>10 files).
+
+Set via `/model {model}` before invoking this skill, or via the project's default model in `~/.claude/settings.json`.
+
 
 ## Instructions
 

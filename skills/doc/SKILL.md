@@ -3,10 +3,11 @@ name: doc
 description: 'Generate documentation — README, API docs, inline comments. Detects project style and follows existing conventions. TRIGGER when user says "напиши документацию", "создай README", "задокументируй API", "добавь комментарии", or when creating/updating public APIs. Docs are part of "done". See `## Trigger phrases` in body for full list.'
 argument-hint: file, module, or "readme" or "api"
 license: MIT
+allowed-tools: Read Write Edit Glob Grep
 paths: ["**/README.md", "**/CHANGELOG.md", "**/docs/**"]
 metadata:
   author: HiH-DimaN
-  version: 1.2.0
+  version: 1.3.0
   category: documentation
   tags: [readme, api-docs, comments, jsdoc]
 ---
@@ -24,6 +25,13 @@ These are the user phrases (Russian and English) that should auto-invoke this sk
 - JSDoc, docstrings, changelog, changelog.md
 - сгенери doc, generate documentation, write docs
 - автоматически после нетривиальной фичи
+
+## Recommended model
+
+**sonnet** — Pattern-matching against existing project doc style. Sonnet is the right balance of quality and speed.
+
+Set via `/model {model}` before invoking this skill, or via the project's default model in `~/.claude/settings.json`.
+
 
 ## Instructions
 

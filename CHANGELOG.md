@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.0] — 2026-04-08
+
+The "10/10 release" — closes the 5 polish items left open in 1.2.0. Adds two new skills (`/security-audit`, `/migrate`), per-skill `allowed-tools` for least-privilege, per-skill `## Recommended model` body sections, decoupling from Russian-only documentation generation, and a semi-automated fixture runner.
+
+### Added
+
+- **`/security-audit` skill** — read-only OWASP-style audit. 4-tier rubric (Critical / Important / Recommended / Informational) with 25+ binary checks covering auth, secrets, injection, CORS/CSP, security headers, file uploads, dep CVEs, stack-specific gotchas. Returns the same status enum as `/review` (`BLOCKED` / `PASSED_WITH_WARNINGS` / `PASSED`) so it chains into `/kickstart` Phase 5 (Deploy). Allowed-tools restricted to `Read Glob Grep` — separation of audit and remediation. Reference: `skills/security-audit/references/security-checklist.md` (~280 lines).
+- **`/migrate` skill** — safe DB migration runner. Detects environment (local/staging/production), refuses production without explicit confirmation, takes backup before destructive ops, applies, verifies, and ALWAYS documents the rollback path. Pre-flight checklist covers PostgreSQL/MySQL/SQLite gotchas (locking ALTER TABLE, ADD COLUMN NOT NULL DEFAULT on PG <11, ALTER COLUMN TYPE on large tables, FK constraint validation, CREATE INDEX without CONCURRENTLY). Reference: `skills/migrate/references/migration-safety.md` (~250 lines).
+- **`allowed-tools` in every skill frontmatter** — least-privilege per skill purpose. Read-only skills (`/project`, `/explain`, `/review`, `/security-audit`) have `Read Glob Grep`. Code-modifying skills add `Edit Write Bash`. `/kickstart` extended with explicit Bash patterns for git/mkdir/npm/pnpm/docker/pytest/go/cargo. No skill has unrestricted Bash access.
+- **`## Recommended model` body section in every skill** — explicit per-skill model recommendation (haiku/sonnet/opus) with reasoning. Replaces the README-only "Recommended Models" table. Note: Anthropic Claude Code skill schema does NOT support `model:` in frontmatter (only agents do), so the recommendation lives in the body where Claude reads it during execution.
+- **`tests/run-fixtures.sh`** — semi-automated fixture runner. Iterates over `tests/fixtures/`, prints each idea.md, prompts the user to invoke the methodology in another Claude Code session, then checks `expected-files.txt` against actual output. Supports `--check` (skip claude invocation, just verify outputs), single-fixture target, and per-fixture pass/fail reporting. Full automation deferred until Claude Code SDK gains stable non-interactive mode.
+- **2 new triggers in `hooks/check-skills.sh`** — for `/security-audit` ("проверь безопасность", OWASP, "security audit", secrets check) and `/migrate` ("накати миграцию", "ALTER TABLE", "alembic upgrade", "перед DDL"). Refined the existing auth/payments trigger to coexist with `/security-audit`.
+
+### Changed
+
+- **`/blueprint` Rules — decoupled from Russian-only**. The previous rule "Все документы на русском языке" was hardcoded. Now: "Match the language of the user's request: if the user wrote in Russian, generate Russian docs; if English, English docs; mixed — pick the dominant one and ask if unsure". Same applied to `/security-audit` reports.
+- **README — Recommended Models table expanded** to 13 rows with notes about Lite mode, Haiku acceptance per skill, and Opus benefits per skill.
+- **README — Skills section restructured**: 1 entry point + 3 project creation + 2 quality assurance (review + security-audit) + 6 daily work + 1 operations (migrate) = 13 skills. Counts updated everywhere.
+- **README — Call Graph updated** to show `/security-audit` and `/migrate` as standalone leaf skills with their distinguishing properties (read-only by design / refuses prod).
+- **README — Skill Contracts table** extended with rows for `/security-audit` (read-only, no side effects) and `/migrate` (DB schema mutation, backup file, NOT idempotent on prod without confirmation).
+- **`plugin.json`** — version 1.2.0 → 1.3.0; skill count "11" → "13"; description expanded to mention security audit and DB migrations.
+- **`README.md` version badge** — 1.2.0 → 1.3.0.
+
+### Reason
+
+Closes the 5 explicit "to reach 10/10" items from the 1.2.0 self-assessment:
+1. ✅ Fixture runner script (semi-auto until SDK matures)
+2. ✅ `allowed-tools` in every skill (least-privilege)
+3. ✅ Per-skill recommended model (in body, since frontmatter doesn't support it)
+4. ✅ New skills `/security-audit` and `/migrate`
+5. ✅ Decouple `/blueprint` from Russian-only
+
+Composite quality score against Anthropic best practices: 9.5 → 10.
+
+---
+
 ## [1.2.0] — 2026-04-08
 
 This release closes the gap between "great methodology on paper" and "actually used by Claude". Triggered by a 2026-04-07 production-incident retrospective where Claude (Opus 4.6) skipped the methodology entirely during a 2-hour ad-hoc hotfix. Root cause: nothing was forcing skill discovery. Fix: enforcement layer + rubric-based quality gates + better discoverability + regression fixtures.

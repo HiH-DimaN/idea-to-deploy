@@ -3,11 +3,12 @@ name: blueprint
 description: 'Generate complete project documentation set (6 files in Full mode, 4 in Lite) — strategic plan, architecture, implementation plan, PRD, README, Claude Code guide. Planning only, no code. TRIGGER when user says "спланируй проект", "подготовь blueprint", "спроектируй", "только планирование без кода". Code generation belongs to /kickstart, not here. See `## Trigger phrases` in body for full list.'
 argument-hint: project idea or description
 license: MIT
+allowed-tools: Read Write Edit Glob Grep
 context: fork
 agent: architect
 metadata:
   author: HiH-DimaN
-  version: 1.2.0
+  version: 1.3.0
   category: project-planning
   tags: [documentation, architecture, planning, prd]
 ---
@@ -24,6 +25,13 @@ These are the user phrases (Russian and English) that should auto-invoke this sk
 - спроектируй, архитектура проекта, техническое задание, ТЗ, PRD
 - только планирование без кода, design the system, system design
 - набор документов для разработчика, передать другому подрядчику
+
+## Recommended model
+
+**opus** — Generates 6 documents (or 4 in Lite). Opus produces materially better strategic plans, architecture decisions, and PRDs. Sonnet falls back to Lite mode automatically.
+
+Set via `/model {model}` before invoking this skill, or via the project's default model in `~/.claude/settings.json`.
+
 
 ## Instructions
 
@@ -141,7 +149,7 @@ Architecture is the source of truth. If PRD conflicts with architecture, update 
 
 ## Rules
 
-- Все документы на русском языке
+- Match the language of the user's request: if the user wrote in Russian, generate Russian docs; if English, English docs; mixed — pick the dominant one and ask if unsure
 - Будь максимально конкретен: имена файлов, таблицы с полями и типами, эндпоинты с параметрами
 - Не пиши абстракций типа "создай компоненты" — пиши конкретные пути
 - Используй стек пользователя из CLAUDE.md когда применимо

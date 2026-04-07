@@ -3,10 +3,11 @@ name: debug
 description: 'Systematically debug an issue — find root cause and fix it. Traces errors through stack traces, logs, git history. TRIGGER when user says "почини баг", "не работает", "ошибка", "крашит", "падает", or pastes any error/stack trace. ALWAYS use this instead of ad-hoc Bash/Read/Grep — even small bugs deserve root-cause analysis. See `## Trigger phrases` in body for full list.'
 argument-hint: error message, symptom, or issue description
 license: MIT
+allowed-tools: Read Edit Glob Grep Bash
 paths: ["**/logs/**", "**/*.log"]
 metadata:
   author: HiH-DimaN
-  version: 1.2.0
+  version: 1.3.0
   category: code-quality
   tags: [debugging, bugfix, troubleshooting]
 ---
@@ -25,6 +26,13 @@ These are the user phrases (Russian and English) that should auto-invoke this sk
 - debug this, fix this bug, troubleshoot
 - любая вставка error message, log fragment, panic
 - симптом без явной ошибки (тихий сбой)
+
+## Recommended model
+
+**sonnet** — Reading logs, grepping, running tests, applying focused fixes. Sonnet handles this well; Opus only helps for very deep/cross-language root-cause analysis.
+
+Set via `/model {model}` before invoking this skill, or via the project's default model in `~/.claude/settings.json`.
+
 
 ## Instructions
 

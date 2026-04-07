@@ -3,9 +3,10 @@ name: refactor
 description: 'Refactor code for readability and maintainability while preserving behavior. Uses Fowler-style catalog (Extract Function, Replace Conditional with Polymorphism, etc.). TRIGGER when user says "отрефактори", "упрости код", "перепиши понятнее", "refactor this", or when code has deep nesting/duplication/long functions. No feature changes. See `## Trigger phrases` in body for full list.'
 argument-hint: file, function, or area to refactor
 license: MIT
+allowed-tools: Read Edit Glob Grep Bash
 metadata:
   author: HiH-DimaN
-  version: 1.2.0
+  version: 1.3.0
   category: code-quality
   tags: [refactoring, clean-code, readability]
 ---
@@ -23,6 +24,13 @@ These are the user phrases (Russian and English) that should auto-invoke this sk
 - глубокая вложенность, code smell, слишком сложный код
 - улучши читаемость, refactor this, clean up
 - code that has poor naming, magic numbers, god class
+
+## Recommended model
+
+**sonnet** — Mechanical transformation guided by the Fowler catalog in references/. Sonnet handles all cataloged refactorings.
+
+Set via `/model {model}` before invoking this skill, or via the project's default model in `~/.claude/settings.json`.
+
 
 ## Instructions
 

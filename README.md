@@ -3,9 +3,9 @@
 > Complete project lifecycle methodology for Claude Code — from idea to deployed product in one command.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Skills: 11](https://img.shields.io/badge/Skills-11-green.svg)](#skills)
+[![Skills: 13](https://img.shields.io/badge/Skills-13-green.svg)](#skills)
 [![Agents: 5](https://img.shields.io/badge/Agents-5-orange.svg)](#subagents)
-[![Version: 1.2.0](https://img.shields.io/badge/Version-1.2.0-purple.svg)](.claude-plugin/plugin.json)
+[![Version: 1.3.0](https://img.shields.io/badge/Version-1.3.0-purple.svg)](.claude-plugin/plugin.json)
 
 **[Русская версия (README.ru.md)](README.ru.md)**
 
@@ -101,11 +101,12 @@ You: "I want to build a delivery app"
 | `/blueprint` | B) Planning only | 6 documentation files, no code |
 | `/guide` | C) Have docs already | You already have architecture and plan docs (from route B, another developer, or another tool) — generates step-by-step prompts to build it |
 
-### Quality Assurance (1 skill)
+### Quality Assurance (2 skills)
 
 | Skill | Description |
 |-------|-------------|
-| `/review` | Validates documentation and code quality with scoring (1-10), cross-reference matrix, and actionable fix suggestions |
+| `/review` | Validates documentation and code quality via deterministic binary rubric (BLOCKED / PASSED_WITH_WARNINGS / PASSED) |
+| `/security-audit` | Read-only OWASP-style security audit (auth, secrets, injection, CORS/CSP, deps) with same status enum as `/review` |
 
 ### Daily Work (6 skills)
 
@@ -117,6 +118,12 @@ You: "I want to build a delivery app"
 | `/refactor` | Improve code structure without changing behavior |
 | `/explain` | Explain how code works with ASCII diagrams |
 | `/doc` | Generate documentation matching project style |
+
+### Operations (1 skill)
+
+| Skill | Description |
+|-------|-------------|
+| `/migrate` | Apply database migrations safely — backup, apply, verify, document rollback. Refuses production without explicit confirmation. |
 
 ## Subagents
 
@@ -147,6 +154,8 @@ Each skill has a documented contract — what it reads, what it writes, what sid
 | `/perf` | File/function/area + perf complaint | Bottleneck report + optimization patches | Source file edits, possibly DB index DDL | ⚠️ Measure between runs |
 | `/explain` | File/function/concept | Markdown explanation + ASCII diagrams (stdout) | None | ✅ |
 | `/doc` | File/module or "readme"/"api" | New/updated docs (README, API docs, inline comments) | Doc file edits | ✅ |
+| `/security-audit` | File/dir/`all` | Audit report (stdout) — Critical/Important/Recommended/Informational tiers | None (read-only by design) | ✅ |
+| `/migrate` | Migration file/`next`/raw SQL | Migration applied + backup file + report with rollback path | DB schema mutation, backup file written to /tmp | ⚠️ Refuses on prod without confirmation |
 
 **Reading the table:**
 - **Idempotent ✅** — safe to run twice on the same input. Output is unchanged.
@@ -176,6 +185,12 @@ Skills can invoke each other. This is the maximum depth and the chains:
 
 /doc (standalone)
   └─ doc-writer agent (subagent fork)
+
+/security-audit (standalone)
+  └─ may suggest fixes but never applies them — separation of audit and remediation
+
+/migrate (standalone)
+  └─ refuses on production without explicit user confirmation
 
 /debug, /refactor, /explain — leaf skills, no nested invocations.
 ```
@@ -273,14 +288,23 @@ Routes are not dead ends — you can switch between them at any time without los
 
 ## Recommended Models
 
-| Skill | Minimum | Recommended |
-|-------|---------|-------------|
-| `/project` | Sonnet | Sonnet |
-| `/blueprint`, `/kickstart` | Sonnet | Opus |
-| `/review`, `/guide` | Sonnet | Opus |
-| `/test`, `/debug`, `/refactor`, `/doc` | Sonnet | Sonnet |
-| `/perf` | Sonnet | Opus |
-| `/explain` | Haiku | Sonnet |
+As of v1.3.0, the recommended model is also encoded in each skill's body in a `## Recommended model` section. The table below is the same data in summary form. `/blueprint` and `/kickstart` auto-fall-back to Lite mode on Sonnet and refuse on Haiku.
+
+| Skill | Minimum | Recommended | Notes |
+|-------|---------|-------------|-------|
+| `/project` | Haiku | Sonnet | Router only — minimal reasoning |
+| `/blueprint` | Sonnet (Lite) | Opus (Full) | Lite mode auto-active on Sonnet |
+| `/kickstart` | Sonnet (Lite) | Opus (Full) | Lite mode auto-active on Sonnet, refuses Haiku |
+| `/guide` | Sonnet | Opus | Long prompt sequences benefit from Opus |
+| `/review` | Sonnet | Opus | Cross-document validation |
+| `/security-audit` | Sonnet | Opus | Cross-file pattern recognition |
+| `/test` | Sonnet | Sonnet | Pattern-matching to existing convention |
+| `/debug` | Sonnet | Sonnet | Opus only for cross-language analysis |
+| `/refactor` | Sonnet | Sonnet | Mechanical via Fowler catalog |
+| `/perf` | Sonnet | Opus | Cross-layer reasoning helps |
+| `/doc` | Sonnet | Sonnet | Style matching is straightforward |
+| `/explain` | Haiku | Haiku | Read-only walkthrough; Haiku is fast enough |
+| `/migrate` | Sonnet | Sonnet | Mechanical (read SQL → run → verify) |
 
 ## Who Is This For
 

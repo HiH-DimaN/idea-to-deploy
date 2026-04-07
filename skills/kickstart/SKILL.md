@@ -3,11 +3,11 @@ name: kickstart
 description: 'Generate a complete project from idea — architecture, plans, docs, code, tests, deploy. Full lifecycle, one shot. TRIGGER when user says "создай проект", "новый проект", "запили проект целиком", "от идеи до деплоя". Usually invoked via /project router. See `## Trigger phrases` in body for full list.'
 argument-hint: project idea or description
 disable-model-invocation: true
-allowed-tools: "Bash(git:*) Bash(mkdir:*) Bash(npm:*) Bash(pnpm:*) Bash(docker:*)"
+allowed-tools: "Read Write Edit Glob Grep Bash(git:*) Bash(mkdir:*) Bash(npm:*) Bash(pnpm:*) Bash(docker:*) Bash(pytest:*) Bash(go:*) Bash(cargo:*)"
 license: MIT
 metadata:
   author: HiH-DimaN
-  version: 1.2.0
+  version: 1.3.0
   category: project-creation
   tags: [scaffolding, mvp, full-lifecycle, deployment]
 ---
@@ -24,6 +24,13 @@ These are the user phrases (Russian and English) that should auto-invoke this sk
 - от идеи до деплоя, полный цикл, end-to-end проект
 - start a project, build it from scratch, end-to-end
 - любой запрос на создание законченного работающего продукта
+
+## Recommended model
+
+**opus** — Generates an entire project end-to-end. Opus is strongly recommended; Sonnet falls back to Lite mode automatically. Haiku is refused at Phase -1.
+
+Set via `/model {model}` before invoking this skill, or via the project's default model in `~/.claude/settings.json`.
+
 
 ## Instructions
 

@@ -68,9 +68,23 @@ TRIGGERS = [
         "🔔 Триггер 'guide' → используй /guide (генерирует CLAUDE_CODE_GUIDE.md).",
     ),
     (
-        r"(\bauth\b|аутентифик|авториз|платеж|оплат\w+\s+(сист|инт|api)|"
+        r"(проверь\s+безопасност|security\s*audit|найди\s+уязвимост|"
+        r"проверь\s+(auth|секрет|токен)|secrets?\s+check|exposed\s+credentials|"
+        r"\bowasp\b|vulnerability\s+scan|перед\s+продакшен\w*\s+проверить)",
+        "🔔 Триггер 'security audit' → используй /security-audit (read-only OWASP-style проверка). Вызови Skill ПЕРВЫМ.",
+    ),
+    (
+        r"(накати\s+миграц|применить\s+миграц|обнови\s+схему\s+бд|"
+        r"\bmigrate\b|apply\s+migration|run\s+migration|rollback\s+migration|"
+        r"alter\s+table|add\s+column|drop\s+table|create\s+index|"
+        r"alembic\s+upgrade|prisma\s+migrate|knex\s+migrate|"
+        r"перед\s+(any\s+)?ddl|нужно\s+изменить\s+схему)",
+        "🔔 Триггер 'миграция БД' → используй /migrate (с backup и rollback path). Вызови Skill ПЕРВЫМ — особенно если речь о production.",
+    ),
+    (
+        r"(аутентифик|авториз|платеж|оплат\w+\s+(сист|инт|api)|"
         r"\bjwt\b|\bcsrf\b|\bxss\b|sql\s*injection)",
-        "🔔 Триггер 'security' → подключи плагин security-guidance перед изменениями.",
+        "🔔 Триггер 'auth/payments' → подключи плагин security-guidance ИЛИ используй /security-audit для read-only проверки.",
     ),
     (
         r"(\bui\b|интерфейс|frontend|дизайн\s+компонент|верстк|\bux\b)",

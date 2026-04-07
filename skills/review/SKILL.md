@@ -3,11 +3,12 @@ name: review
 description: 'Validate quality of project documentation and code via deterministic binary rubric. Checks consistency between PRD, architecture, plan, and code. TRIGGER when user says "проверь документацию", "проверь код", "ревью", "review project", or before any commit touching more than 2 files. Returns BLOCKED / PASSED_WITH_WARNINGS / PASSED. See `## Trigger phrases` in body for full list.'
 argument-hint: project path or specific document to review
 license: MIT
+allowed-tools: Read Glob Grep
 context: fork
 agent: code-reviewer
 metadata:
   author: HiH-DimaN
-  version: 1.2.0
+  version: 1.3.0
   category: quality-assurance
   tags: [validation, quality-check, review, consistency]
 ---
@@ -26,6 +27,13 @@ These are the user phrases (Russian and English) that should auto-invoke this sk
 - автоматически перед коммитом >2 файлов
 
 You are a quality validator for project documentation and code. Your job is to find gaps, inconsistencies, and missing pieces BEFORE implementation begins.
+
+## Recommended model
+
+**opus** — Cross-document validation requires holding all 6 documents in working memory simultaneously and checking ~25 rubric items. Opus is recommended; the code-reviewer subagent fork is also Sonnet-capable.
+
+Set via `/model {model}` before invoking this skill, or via the project's default model in `~/.claude/settings.json`.
+
 
 ## Instructions
 

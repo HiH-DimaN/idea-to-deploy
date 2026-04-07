@@ -3,10 +3,11 @@ name: test
 description: 'Generate comprehensive tests — unit, integration, edge cases. Detects project test framework (pytest/vitest/jest/go test) and follows existing conventions. TRIGGER when user says "напиши тесты", "покрой тестами", "добавь тесты", or after writing new code / fixing a bug. Generating a regression test for a fix is part of finishing the fix. See `## Trigger phrases` in body for full list.'
 argument-hint: file, function, or module to test
 license: MIT
+allowed-tools: Read Write Edit Glob Grep Bash
 paths: ["**/test_*.py", "**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts", "**/*.spec.tsx", "**/tests/**", "**/__tests__/**"]
 metadata:
   author: HiH-DimaN
-  version: 1.2.0
+  version: 1.3.0
   category: testing
   tags: [unit-tests, integration-tests, edge-cases, tdd]
 ---
@@ -24,6 +25,13 @@ These are the user phrases (Russian and English) that should auto-invoke this sk
 - pytest, vitest, jest, go test, RSpec
 - add tests, test this, generate tests
 - автоматически после нового кода или после фикса бага
+
+## Recommended model
+
+**sonnet** — Pattern-matching against existing test conventions. Sonnet covers all major frameworks. Opus only adds value when designing test strategy for very complex domain logic.
+
+Set via `/model {model}` before invoking this skill, or via the project's default model in `~/.claude/settings.json`.
+
 
 ## Instructions
 

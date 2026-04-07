@@ -3,9 +3,10 @@ name: project
 description: 'Smart project creation router — single entry point for all "new project from scratch" scenarios. Asks one question and routes to /kickstart, /blueprint, or /guide. TRIGGER when user says "хочу проект", "новый проект", "создай проект". ALWAYS prefer this router over jumping into code or invoking /kickstart directly. See `## Trigger phrases` in body for the full list.'
 argument-hint: project idea or description
 license: MIT
+allowed-tools: Read
 metadata:
   author: HiH-DimaN
-  version: 1.2.0
+  version: 1.3.0
   category: project-creation
   tags: [router, workflow, project-creation, methodology]
 ---
@@ -24,6 +25,13 @@ These are the user phrases (Russian and English) that should auto-invoke this sk
 - любой запрос на создание нового приложения/сайта/сервиса с нуля
 
 You are the single entry point for all project creation. Your job is to understand what the user needs and route them to the right workflow.
+
+## Recommended model
+
+**sonnet** — Router only — asks one routing question and dispatches. No code or doc generation. Sonnet is plenty.
+
+Set via `/model {model}` before invoking this skill, or via the project's default model in `~/.claude/settings.json`.
+
 
 ## Instructions
 
