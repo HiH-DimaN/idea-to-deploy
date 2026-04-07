@@ -6,7 +6,7 @@ license: MIT
 allowed-tools: Read Write Edit Glob Grep
 metadata:
   author: HiH-DimaN
-  version: 1.3.0
+  version: 1.3.1
   category: project-planning
   tags: [prompts, cookbook, claude-code-guide]
 ---

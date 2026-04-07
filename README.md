@@ -5,7 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Skills: 13](https://img.shields.io/badge/Skills-13-green.svg)](#skills)
 [![Agents: 5](https://img.shields.io/badge/Agents-5-orange.svg)](#subagents)
-[![Version: 1.3.0](https://img.shields.io/badge/Version-1.3.0-purple.svg)](.claude-plugin/plugin.json)
+[![Version: 1.3.1](https://img.shields.io/badge/Version-1.3.1-purple.svg)](.claude-plugin/plugin.json)
 
 **[Русская версия (README.ru.md)](README.ru.md)**
 
@@ -21,7 +21,7 @@ Claude Code is powerful, but without instructions it works like a builder withou
 
 ## The Solution
 
-**idea-to-deploy** is a methodology, not just a set of tools. 11 skills + 5 specialized agents that turn Claude Code into a professional developer with a proven pipeline:
+**idea-to-deploy** is a methodology, not just a set of tools. 13 skills + 5 specialized agents that turn Claude Code into a professional developer with a proven pipeline:
 
 ```
 Idea → Questions → Plan → Architecture → Code → Tests → Review → Deploy

@@ -7,7 +7,7 @@ allowed-tools: "Read Write Edit Glob Grep Bash(git:*) Bash(mkdir:*) Bash(npm:*) 
 license: MIT
 metadata:
   author: HiH-DimaN
-  version: 1.3.0
+  version: 1.3.1
   category: project-creation
   tags: [scaffolding, mvp, full-lifecycle, deployment]
 ---

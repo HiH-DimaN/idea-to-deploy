@@ -7,7 +7,7 @@ allowed-tools: Read Write Edit Glob Grep
 paths: ["**/README.md", "**/CHANGELOG.md", "**/docs/**"]
 metadata:
   author: HiH-DimaN
-  version: 1.3.0
+  version: 1.3.1
   category: documentation
   tags: [readme, api-docs, comments, jsdoc]
 ---

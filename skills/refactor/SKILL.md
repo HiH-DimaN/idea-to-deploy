@@ -6,7 +6,7 @@ license: MIT
 allowed-tools: Read Edit Glob Grep Bash
 metadata:
   author: HiH-DimaN
-  version: 1.3.0
+  version: 1.3.1
   category: code-quality
   tags: [refactoring, clean-code, readability]
 ---

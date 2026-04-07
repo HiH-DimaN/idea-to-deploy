@@ -8,7 +8,7 @@ context: fork
 agent: perf-analyzer
 metadata:
   author: HiH-DimaN
-  version: 1.3.0
+  version: 1.3.1
   category: code-quality
   tags: [performance, optimization, profiling, bottleneck]
 ---

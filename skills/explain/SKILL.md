@@ -6,7 +6,7 @@ license: MIT
 allowed-tools: Read Glob Grep
 metadata:
   author: HiH-DimaN
-  version: 1.3.0
+  version: 1.3.1
   category: code-understanding
   tags: [code-review, architecture, learning]
 ---

@@ -8,7 +8,7 @@ context: fork
 agent: code-reviewer
 metadata:
   author: HiH-DimaN
-  version: 1.3.0
+  version: 1.3.1
   category: quality-assurance
   tags: [validation, quality-check, review, consistency]
 ---
@@ -120,3 +120,29 @@ Fix: Add POST /api/auth/reset-password to architecture with request/response for
 Architecture says table "clients", implementation plan says "customers", code has "users".
 Report: Critical issue — inconsistent entity naming across documents.
 Fix: Standardize to one name across all documents.
+
+## Troubleshooting
+
+### A Critical check fails but the user insists the project is fine
+The rubric is deterministic — if a Critical check fails, there's a real gap between what the documents promise and what they deliver. Do not soften the status to please the user. Instead:
+1. Re-read the failing check criterion from `references/review-checklist.md`
+2. Re-verify against the actual document content
+3. If the check is truly inapplicable (e.g., C2 database check on a no-DB CLI tool), the rubric explicitly allows the "no database" justification path — verify the document has that justification, then the check passes
+4. If the user wants to override anyway, return `BLOCKED` and let them invoke `/kickstart` with explicit `--skip-review` (not currently supported, but a future flag) — never silently downgrade the status
+
+### Two consecutive runs give different results
+This should not happen with the binary rubric. If it does, the cause is almost always:
+- A document was edited between runs
+- The rubric's source files have additions (e.g., a new fixture appeared)
+- A source code file was added/removed (affects code-only checks)
+
+Diff the `references/review-checklist.md` against what was used in the previous run.
+
+### Rubric check is missing a case I care about
+Add it to `references/review-checklist.md` in the appropriate tier (Critical / Important / Nice-to-have). Choose Important by default — Critical checks block deploys, so the bar should be high. Document the new check's binary criterion explicitly, not as a vague guideline.
+
+### Code-only checks fail because there's no source code yet
+That's expected. The rubric's code-only checks (C-code-1, C-code-2, I-code-1, I-code-2, N-code-1) are skipped when no source files exist. Report status is computed only over the doc-level checks. This is documented in `references/review-checklist.md` — verify it's accurate.
+
+### Status is `PASSED_WITH_WARNINGS` but the user wants it to pass cleanly
+The Important warnings are real issues — fix them, don't hide them. Each warning has a `→ reason` annotation showing what to add or change. Apply the fix, re-run only that check, status becomes `PASSED`.

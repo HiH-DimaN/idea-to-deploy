@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.1] — 2026-04-08
+
+Patch release. Two consistency bugs caught by an independent fact-finding pass after v1.3.0 was published. Composite quality score: 9.8 → 10.
+
+### Fixed
+
+- **README.md:24** said "11 skills + 5 specialized agents" — leftover from the v1.2.0 era. Updated to "13 skills + 5 specialized agents", consistent with the badge, the Skills section, the Skill Contracts table, the Recommended Models table, and `plugin.json`.
+- **`/review` was missing `## Troubleshooting` section** — the only one of 13 skills without it. Added a substantive Troubleshooting section covering: Critical check failures the user wants to override, non-deterministic results, missing rubric checks, code-only checks when there's no source code, and `PASSED_WITH_WARNINGS` confusion. All other skills already had this section; `/review` was the outlier.
+
+### Reason
+
+A fresh independent audit (Explore subagent in forked context) of the v1.3.0 release surfaced these two issues. Both are consistency bugs that don't affect functionality but undermine the "10/10 polish" claim the v1.3.0 release made. Fixed in a same-day patch rather than waiting for the next minor release, because the methodology is the public face of this work.
+
+The audit also flagged some false positives (it claimed several skills were missing Examples/Troubleshooting; verified by `grep` that they were actually present). A real audit caught real issues — that's the system working as designed.
+
+---
+
 ## [1.3.0] — 2026-04-08
 
 The "10/10 release" — closes the 5 polish items left open in 1.2.0. Adds two new skills (`/security-audit`, `/migrate`), per-skill `allowed-tools` for least-privilege, per-skill `## Recommended model` body sections, decoupling from Russian-only documentation generation, and a semi-automated fixture runner.

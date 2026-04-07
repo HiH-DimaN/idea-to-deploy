@@ -8,7 +8,7 @@ context: fork
 agent: architect
 metadata:
   author: HiH-DimaN
-  version: 1.3.0
+  version: 1.3.1
   category: project-planning
   tags: [documentation, architecture, planning, prd]
 ---

@@ -7,7 +7,7 @@ allowed-tools: Read Write Edit Glob Grep Bash
 paths: ["**/test_*.py", "**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts", "**/*.spec.tsx", "**/tests/**", "**/__tests__/**"]
 metadata:
   author: HiH-DimaN
-  version: 1.3.0
+  version: 1.3.1
   category: testing
   tags: [unit-tests, integration-tests, edge-cases, tdd]
 ---
