@@ -5,7 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Skills: 16](https://img.shields.io/badge/Skills-16-green.svg)](#скиллы)
 [![Agents: 5](https://img.shields.io/badge/Agents-5-orange.svg)](#субагенты)
-[![Version: 1.5.0](https://img.shields.io/badge/Version-1.5.0-purple.svg)](.claude-plugin/plugin.json)
+[![Version: 1.5.1](https://img.shields.io/badge/Version-1.5.1-purple.svg)](.claude-plugin/plugin.json)
 [![Status: Stable](https://img.shields.io/badge/Status-Stable-brightgreen.svg)](CHANGELOG.md)
 [![Type: Claude Code Plugin](https://img.shields.io/badge/Type-Claude%20Code%20Plugin-blueviolet.svg)](.claude-plugin/plugin.json)
 
@@ -313,8 +313,8 @@ chmod +x ~/.claude/hooks/*.sh
 После установки:
 - `check-skills.sh` (UserPromptSubmit) сканирует каждый промпт на ~80 русских/английских триггеров и инжектит напоминание `[SKILL HINT]`, если скилл подходит. **Мягкое напоминание — не блокирует.**
 - `check-tool-skill.sh` (PreToolUse на Bash/Edit/Write/NotebookEdit) инжектит напоминание `[SKILL CHECK]` перед сырыми tool calls. **Мягкое напоминание — не блокирует.**
-- **`check-skill-completeness.sh` (v1.5.0, PostToolUse на Write/Edit/MultiEdit)** — после любой правки `skills/*/SKILL.md` внутри методологического репозитория проверяет наличие `references/`, триггеров в промпт-хуке и регрессионного фикстура. **Жёсткий блок (exit 2, decision:block) — ход не продолжится, пока пробел не закрыт.**
-- **`check-commit-completeness.sh` (v1.5.0, PreToolUse на Bash)** — перед любым `git commit` внутри методологического репозитория парсит staged diff и отказывает в коммите, если staged файл скилла без поддерживающих артефактов. **Жёсткий блок (exit 2, decision:deny) — коммит не запустится.**
+- **`check-skill-completeness.sh` (v1.5.1, PreToolUse на Write/Edit/MultiEdit)** — **до** любой правки `skills/*/SKILL.md` внутри методологического репозитория парсит pending tool input и проверяет наличие `references/`, триггеров в промпт-хуке и регрессионного фикстура. **Жёсткий блок (exit 2 + `hookSpecificOutput.permissionDecision: "deny"`) — Write не запустится, файл не попадёт на диск.**
+- **`check-commit-completeness.sh` (v1.5.1, PreToolUse на Bash)** — перед любым `git commit` внутри методологического репозитория парсит staged diff и отказывает в коммите, если staged файл скилла без поддерживающих артефактов. **Жёсткий блок (exit 2 + `hookSpecificOutput.permissionDecision: "deny"`) — коммит не запустится.**
 
 Все четыре хука срабатывают сразу — перезапуск Claude Code не нужен. Два v1.5.0 enforcement-хука активны только внутри методологического репозитория (детект через `.claude-plugin/plugin.json`); на сторонних проектах это no-op.
 

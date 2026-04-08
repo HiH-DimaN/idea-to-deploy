@@ -7,6 +7,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.5.1] — 2026-04-08
+
+Patch release. Fixes two spec-compliance bugs in the v1.5.0 enforcement hooks, found during a post-release audit against Anthropic's official Claude Code hooks documentation. The short version: v1.5.0 claimed structural enforcement but shipped partially-fictional enforcement. v1.5.1 makes it real.
+
+### Fixed
+
+- **`hooks/check-skill-completeness.sh` moved from PostToolUse to PreToolUse.** The v1.5.0 version fired on `PostToolUse` with a top-level `decision: "block"` field and exit code 2. Per [Anthropic's hooks spec](https://code.claude.com/docs/en/hooks.md), **PostToolUse exit 2 is non-blocking by design** — the tool has already executed by the time PostToolUse fires, so "block" at that point can only feed a message back to Claude, not physically prevent the Write from landing on disk. The v1.5.0 README claim that the hook makes it "physically impossible to skip the methodology" was overstated.
+
+  The v1.5.1 version fires on `PreToolUse` matching `Write|Edit|MultiEdit`. It parses `tool_input` (for Write: `content`; for Edit: `new_string`; for MultiEdit: concatenated `edits[].new_string`) to determine what the SKILL.md will contain *after* the tool would run, checks the repo's disk state for supporting artifacts, and — if anything is missing — emits a deny decision before the tool runs. The file never touches the filesystem until the gap is closed. This is the enforcement semantics the v1.5.0 CHANGELOG claimed.
+
+- **`hooks/check-commit-completeness.sh` JSON payload schema corrected.** The v1.5.0 version put the deny decision at the JSON root as `{"decision": "deny", "reason": "..."}`. Per the PreToolUse section of the hooks spec, the correct location is `hookSpecificOutput.permissionDecision: "deny"` with `permissionDecisionReason: "..."`. The root-level `decision` field is the PostToolUse schema, not PreToolUse. The v1.5.0 hook still blocked commits because exit 2 alone is sufficient for PreToolUse, but the JSON fields were silently dropped by Claude Code's schema validator — any logging or UI reading `permissionDecision` would have seen nothing. v1.5.1 uses the correct schema.
+
+- **`hooks/check-skill-completeness.sh` also updated to the correct PreToolUse schema** (`hookSpecificOutput.permissionDecision` instead of top-level `decision`). Same root cause as the commit-gate hook.
+
+- **Hook pipe-tests in `hooks/README.md`** updated to reflect the v1.5.1 JSON schema. The Write pipe-test now includes a `content` field (because PreToolUse sees the payload before the write) instead of just the file path.
+
+### Changed
+
+- **`hooks/README.md`**: the hooks table "When it fires" column updated for the moved hook (PostToolUse → PreToolUse). Added a v1.5.1 note explaining why the move was necessary, with a link to Anthropic's hooks spec. `settings.json` snippet updated: the completeness hook is now under `PreToolUse` matching `Write|Edit|MultiEdit` in the same array as the commit-gate hook.
+- **`README.md` / `README.ru.md`** Recommended Setup section: bullet for the completeness hook now says "PreToolUse on Write/Edit/MultiEdit" and "the Write never runs, the file never lands on disk". Both READMEs bumped to 1.5.1.
+- **`plugin.json`** version 1.5.0 → 1.5.1.
+
+### Verified before release
+
+- **Gate 1 (`/review --self`)** was run inline against the v1.5.1 working tree before the commit. Result: PASSED (0 Critical, 0 Important). Same meta-rubric as v1.5.0 — no new checks, just new enforcement reality.
+- **Pipe-tests** for both v1.5.1 hooks executed manually:
+  - `check-skill-completeness.sh` on a synthetic Write payload targeting a non-existent skill: received JSON with `hookSpecificOutput.permissionDecision: "deny"` and exit code 2. ✅
+  - `check-commit-completeness.sh` on a synthetic git-commit payload: received the same structure. ✅
+- **Gate 2 (commit-gate hook)** validated itself on the v1.5.1 release commit — this commit was tested by `check-commit-completeness.sh` on its own staged diff. No skill files are staged in this commit, so the gate is a no-op, but the hook ran and returned exit 0 cleanly.
+
+### Root cause
+
+v1.5.0 was written without consulting the official hooks documentation. The JSON schemas and exit code semantics were inferred from the v1.5.0 author's (my) mental model, not from the spec. That model was wrong on two points — PostToolUse blocking semantics and PreToolUse field naming — and both points escaped the meta-review because the rubric checks structural completeness (does the hook exist? does it mention the right event name?) but not Anthropic spec compliance (does the JSON schema match? is the exit code semantics right for this event?).
+
+**Follow-up for v1.5.2 or v1.6.0:** add `M-C10` to the meta-review rubric — "every hook's JSON output schema matches its declared event type per Anthropic's spec". That check would have caught both bugs.
+
+### Philosophy note
+
+v1.4.0: Potemkin skills (references/ folders referenced but not created).
+v1.4.1: content fix.
+v1.5.0: Potemkin enforcement (block decisions declared but non-blocking per spec).
+v1.5.1: content fix + process acknowledgment that the meta-review rubric itself has gaps.
+
+Every release in the v1.4–v1.5 sequence caught its own predecessor's blind spot. The meta-rubric is maturing through use, not through top-down design. That's actually the right way for this kind of tooling to evolve — you can't predict all the ways it will go wrong, you can only make the feedback loop fast enough that each failure teaches the rubric something new.
+
+---
+
 ## [1.5.0] — 2026-04-08
 
 Minor release. Closes the two open process gaps from the v1.4.1 post-mortem: "need harder enforcement (PostToolUse hooks that block commits without tests/references)" and "the self-extension loop bypassed its own Quality Gates". v1.5.0 is the first release where the methodology has structural defenses against the v1.4.0 Potemkin-release pattern, not just documentation saying "please don't do that again".

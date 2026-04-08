@@ -21,6 +21,14 @@ commit itself the enforcement point — a shortcut is no longer possible.
 
 The hook is a no-op for any Bash command that is not `git commit`.
 
+v1.5.1 fix: the JSON payload now uses the correct PreToolUse schema
+per https://code.claude.com/docs/en/hooks.md — the deny decision lives
+at `hookSpecificOutput.permissionDecision`, not at the root as in
+v1.5.0. Exit 2 alone already blocks the tool call, but the malformed
+JSON in v1.5.0 meant the `permissionDecision` field was silently
+dropped by Claude Code's schema validator. Both layers of the block
+are now correct.
+
 Reads JSON on stdin:
   {"tool_name": "Bash", "tool_input": {"command": "git commit ..."}}
 """
@@ -171,19 +179,19 @@ def emit_deny(errors: list[str]) -> None:
         "(инцидент v1.4.0):\n\n"
         + "\n".join(f"  ❌ {e}" for e in errors)
         + "\n\nЗакрой все пункты и повтори `git commit`. Хук не обойти "
-        "флагом — это его задача. Если нарушение ложное (например, "
-        "legitimate rename), используй `git -c core.hooksPath=/dev/null` "
-        "ИЛИ добавь запись в .claude-completeness-ignore с обоснованием."
+        "флагом — это его задача. Единственный legitimate escape — "
+        "файл `.methodology-self-extend-override` в корне репо с "
+        "письменным обоснованием."
     )
     out = {
         "hookSpecificOutput": {
             "hookEventName": "PreToolUse",
-            "additionalContext": msg,
-        },
-        "decision": "deny",
-        "reason": msg,
+            "permissionDecision": "deny",
+            "permissionDecisionReason": msg,
+        }
     }
     sys.stdout.write(json.dumps(out, ensure_ascii=False))
+    sys.stderr.write(msg)
     sys.exit(2)
 
 

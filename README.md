@@ -5,7 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Skills: 16](https://img.shields.io/badge/Skills-16-green.svg)](#skills)
 [![Agents: 5](https://img.shields.io/badge/Agents-5-orange.svg)](#subagents)
-[![Version: 1.5.0](https://img.shields.io/badge/Version-1.5.0-purple.svg)](.claude-plugin/plugin.json)
+[![Version: 1.5.1](https://img.shields.io/badge/Version-1.5.1-purple.svg)](.claude-plugin/plugin.json)
 [![Status: Stable](https://img.shields.io/badge/Status-Stable-brightgreen.svg)](CHANGELOG.md)
 [![Type: Claude Code Plugin](https://img.shields.io/badge/Type-Claude%20Code%20Plugin-blueviolet.svg)](.claude-plugin/plugin.json)
 
@@ -313,8 +313,8 @@ Then add the `hooks` block to your `~/.claude/settings.json` — full instructio
 After installation:
 - `check-skills.sh` (UserPromptSubmit) scans every prompt for ~80 Russian/English triggers and injects a `[SKILL HINT]` reminder when a skill matches. **Soft reminder — never blocks.**
 - `check-tool-skill.sh` (PreToolUse on Bash/Edit/Write/NotebookEdit) injects a `[SKILL CHECK]` reminder before raw tool calls. **Soft reminder — never blocks.**
-- **`check-skill-completeness.sh` (v1.5.0, PostToolUse on Write/Edit/MultiEdit)** — after any modification to `skills/*/SKILL.md` inside a methodology repo, verifies that `references/`, trigger phrases in the prompt hook, and regression fixture all exist. **Hard block (exit 2, decision:block) — the turn cannot progress until the gap is closed.**
-- **`check-commit-completeness.sh` (v1.5.0, PreToolUse on Bash)** — before any `git commit` inside a methodology repo, parses the staged diff and denies the commit if a skill file is staged without its supporting artifacts. **Hard block (exit 2, decision:deny) — the commit never runs.**
+- **`check-skill-completeness.sh` (v1.5.1, PreToolUse on Write/Edit/MultiEdit)** — **before** any modification to `skills/*/SKILL.md` inside a methodology repo, parses the pending tool input and verifies that `references/`, trigger phrases in the prompt hook, and regression fixture all exist. **Hard block (exit 2 + `hookSpecificOutput.permissionDecision: "deny"`) — the Write never runs, the file never lands on disk.**
+- **`check-commit-completeness.sh` (v1.5.1, PreToolUse on Bash)** — before any `git commit` inside a methodology repo, parses the staged diff and denies the commit if a skill file is staged without its supporting artifacts. **Hard block (exit 2 + `hookSpecificOutput.permissionDecision: "deny"`) — the commit never runs.**
 
 All four hooks fire live — no Claude Code restart needed. The two v1.5.0 enforcement hooks only fire inside the methodology repo (detected via `.claude-plugin/plugin.json`); they are no-ops on unrelated projects.
 

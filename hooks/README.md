@@ -8,8 +8,8 @@ These two hooks turn the methodology from "use it if you remember" into "you lit
 |---|---|---|---|
 | `check-skills.sh` | Every user prompt (UserPromptSubmit) | Scans the prompt for Russian/English trigger words. If matched, injects a system reminder telling Claude which skill should be invoked first. Silent if no trigger matches. | No — soft reminder only |
 | `check-tool-skill.sh` | Before every Bash/Edit/Write/NotebookEdit (PreToolUse) | Injects a checklist reminder asking Claude to verify a skill doesn't fit before doing raw tool calls. | No — soft reminder only |
-| `check-skill-completeness.sh` *(v1.5.0)* | After Write/Edit on `skills/*/SKILL.md` (PostToolUse) | Verifies the skill is structurally complete: `references/` exists if referenced, trigger phrase present in `check-skills.sh`, fixture present in `tests/fixtures/`. | **Yes — exit 2 with decision:block.** Turn stops until the gap is closed. |
-| `check-commit-completeness.sh` *(v1.5.0)* | Before every Bash command matching `git commit` (PreToolUse) | Parses the staged diff. If any `skills/<name>/SKILL.md` is staged, the hook requires matching references/hook/fixture to also be staged (or already present on disk). Written to be the last line of defense against the v1.4.0 "Potemkin release" pattern. | **Yes — exit 2 with decision:deny.** The commit never runs. |
+| `check-skill-completeness.sh` *(v1.5.1)* | **Before** Write/Edit/MultiEdit on `skills/*/SKILL.md` (PreToolUse) | Parses the pending tool input, extracts the skill name from the file path, verifies that `references/` exists and is non-empty (if the pending content mentions it), that `hooks/check-skills.sh` has a trigger phrase for the skill, and that a matching fixture exists in `tests/fixtures/`. | **Yes — exit 2 with `hookSpecificOutput.permissionDecision: "deny"`.** The Write never runs, the file never lands on disk. |
+| `check-commit-completeness.sh` *(v1.5.1)* | Before every Bash command matching `git commit` (PreToolUse) | Parses the staged diff. If any `skills/<name>/SKILL.md` is staged, the hook requires matching references/hook/fixture to also be staged (or already present on disk). Written to be the last line of defense against the v1.4.0 "Potemkin release" pattern. | **Yes — exit 2 with `hookSpecificOutput.permissionDecision: "deny"`.** The commit never runs. |
 
 All four hooks are written in Python 3 (works out of the box on macOS/Linux/WSL), depend only on the standard library, and exit silently in degenerate cases (bad JSON, empty payload, not in the methodology repo) — they never break your session on unrelated work.
 
@@ -65,9 +65,7 @@ Add this `hooks` block to your `~/.claude/settings.json` (merge with existing se
             "timeout": 5
           }
         ]
-      }
-    ],
-    "PostToolUse": [
+      },
       {
         "matcher": "Write|Edit|MultiEdit",
         "hooks": [
@@ -82,6 +80,8 @@ Add this `hooks` block to your `~/.claude/settings.json` (merge with existing se
   }
 }
 ```
+
+> **v1.5.1 note:** `check-skill-completeness.sh` moved from PostToolUse to PreToolUse in v1.5.1 because PostToolUse exit 2 is non-blocking per [Anthropic's hooks spec](https://code.claude.com/docs/en/hooks.md) — the tool already ran by that point, so the file would land on disk and the "block" would only be a message. PreToolUse exit 2 actually prevents the Write from executing. Both v1.5.1 hooks emit the correct `hookSpecificOutput.permissionDecision` field (v1.5.0 used a top-level `decision` field that was silently ignored by the schema validator).
 
 **Important — enforcement vs. reminder hooks:**
 
@@ -110,17 +110,17 @@ echo '{"tool_name":"Bash","tool_input":{"command":"ls"}}' | ~/.claude/hooks/chec
 
 You should see JSON with a SKILL CHECK reminder about Bash.
 
-Pipe-test the completeness hook (v1.5.0) — must be run inside a methodology repo to see the block:
+Pipe-test the completeness hook (v1.5.1) — must be run inside a methodology repo to see the block:
 
 ```bash
 cd /path/to/idea-to-deploy
-echo '{"tool_name":"Write","tool_input":{"file_path":"skills/fake-skill/SKILL.md"}}' \
+echo '{"tool_name":"Write","tool_input":{"file_path":"skills/fake-skill/SKILL.md","content":"body references/foo-checklist.md"}}' \
   | ~/.claude/hooks/check-skill-completeness.sh
 ```
 
-You should see JSON with `"decision": "block"` and a list of missing artifacts (references, trigger, fixture).
+You should see JSON with `hookSpecificOutput.permissionDecision: "deny"` and a list of missing artifacts (references, trigger, fixture). Exit code 2.
 
-Pipe-test the commit-gate hook (v1.5.0) — must be inside a methodology repo with a staged SKILL.md:
+Pipe-test the commit-gate hook (v1.5.1) — must be inside a methodology repo with a staged SKILL.md:
 
 ```bash
 cd /path/to/idea-to-deploy
@@ -129,7 +129,7 @@ echo '{"tool_name":"Bash","tool_input":{"command":"git commit -m test"}}' \
   | ~/.claude/hooks/check-commit-completeness.sh
 ```
 
-You should see JSON with `"decision": "deny"` explaining which skill is incomplete.
+You should see JSON with `hookSpecificOutput.permissionDecision: "deny"` explaining which skill is incomplete. Exit code 2.
 
 ## Customizing triggers
 
