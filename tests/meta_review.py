@@ -258,6 +258,28 @@ def run_rubric(repo: Path) -> Report:
     except Exception as e:
         r.imp("M-I7", f"could not load hook module: {e}")
 
+    # --- M-C11: trigger drift verifier (v1.7.0) ---
+    # Delegate to tests/verify_triggers.py via subprocess. Each canonical
+    # phrase in every SKILL.md `## Trigger phrases` section must match a
+    # regex in hooks/check-skills.sh and route to the right skill.
+    try:
+        verify_script = repo / "tests" / "verify_triggers.py"
+        if verify_script.exists():
+            result = subprocess.run(
+                ["python3", str(verify_script), "--json"],
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
+            data = json.loads(result.stdout) if result.stdout else {"drift_count": 0, "findings": []}
+            for f in data.get("findings", []):
+                if f.get("kind") == "no-trigger-section":
+                    r.imp("M-C11", f"/{f['skill']}: {f['detail']}")
+                else:
+                    r.crit("M-C11", f"/{f['skill']}: {f['detail']}")
+    except Exception as e:
+        r.imp("M-C11", f"could not run verify_triggers.py: {e}")
+
     # --- M-C10: hook schema + exit code compliance ---
     events_spec = {
         "PreToolUse":       {"perm_decision_required": True,  "may_block": True},

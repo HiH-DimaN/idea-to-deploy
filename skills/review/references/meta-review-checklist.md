@@ -129,6 +129,28 @@ If any of 1–3 disagree → fail.
 
 **Why this check exists:** v1.5.0 shipped two hooks — `check-skill-completeness.sh` (PostToolUse with `decision: "block"`, advertised as hard-blocking) and `check-commit-completeness.sh` (PreToolUse with root-level `decision: "deny"`). Both were wrong per Anthropic's spec. Neither was caught by the v1.5.0 meta-review because the rubric checked structural completeness (hook exists, references correct event name), not spec compliance (field paths, exit code semantics per event). v1.6.0 adds M-C10 so the next hook-related mistake cannot repeat the same blind spot.
 
+### M-C11. Every canonical trigger phrase in a `SKILL.md` body routes to the right skill via `hooks/check-skills.sh`
+**Added in v1.7.0 — closes the v1.4.0 drift-class of bug.**
+
+**Criterion (binary):** for each `skills/<name>/SKILL.md` whose frontmatter does NOT set `disable-model-invocation: true`:
+
+1. Extract the list of trigger phrases from the `## Trigger phrases` section (bullet lines, comma-separated). Filter out:
+   - Meta-descriptions (lines starting with `любой`, `любая`, `автоматически`, `перед любым`, `есть документация`, `нужны`, `multi-file`, `see`, `full list`, etc.)
+   - Lines with more than 6 words (descriptions, not literal phrases)
+   - Backtick code spans and URLs
+2. For each remaining canonical phrase, scan the `TRIGGERS` list in `hooks/check-skills.sh` and verify that at least one regex matches the phrase AND the matched hint text mentions `/<skill-name>`.
+
+**Failure modes:**
+- `unmatched` — the phrase exists in the SKILL.md body but no regex in the hook matches it. Drift.
+- `wrong-route` — the phrase matches a regex, but the hint routes to a different skill. Cross-wired.
+- `no-trigger-section` — the SKILL.md has no `## Trigger phrases` section at all (Important warning, not Critical — some legacy skills may still be missing it).
+
+**Verification script:** `tests/verify_triggers.py` (added in v1.7.0). Runs as part of the meta-review via subprocess. Invoke standalone with `python3 tests/verify_triggers.py` — exits 0 on no drift, 1 on drift, 2 on internal error. Output can be JSON (`--json`) or human-readable.
+
+**Action on fail:** either (a) add the missing phrase to the corresponding regex in `hooks/check-skills.sh`, OR (b) remove the phrase from the SKILL.md body if it's not actually a literal user input. The SKILL.md body is treated as the canonical source of truth — if it's listed there as a trigger, the hook must route it correctly.
+
+**Why this check exists:** throughout v1.2.0–v1.6.1 the SKILL.md `## Trigger phrases` sections drifted from `hooks/check-skills.sh`. Phrases listed in bodies were never matched by hook regex (or matched the wrong one), and nothing caught it until users reported missing hints or a smoke-test caught one by accident (the v1.4.0 "provision ec2 instance" miss). v1.7.0 runs the verifier on every meta-review; the initial run against v1.6.1 found 111 drift findings that had accumulated silently over 5 minor releases. v1.7.0 closes all 111 as part of the release — see the CHANGELOG [1.7.0] entry for the fix breakdown.
+
 ---
 
 ## Tier 2: Important (warn but pass)
@@ -191,7 +213,7 @@ Same as the standard `/review` rubric — tier-by-tier list with ✅/❌/⚠️/
 ### Summary
 | Tier | Pass | Total | Status |
 |---|---|---|---|
-| Critical | 9 | 10 | ❌ BLOCKED |
+| Critical | 10 | 11 | ❌ BLOCKED |
 | Important | 6 | 8 | ⚠️ |
 | Nice-to-have | 3 | 4 | ℹ️ |
 
@@ -201,5 +223,7 @@ Same as the standard `/review` rubric — tier-by-tier list with ✅/❌/⚠️/
 ```
 
 > **v1.6.0 note:** the Critical tier grew from 9 to 10 checks with the addition of M-C10 (hook schema compliance). All 4 hooks in the v1.6.0 methodology repo pass M-C10; the check was validated on the v1.5.1 post-fix state before being merged into the rubric.
+>
+> **v1.7.0 note:** the Critical tier grew from 10 to 11 with the addition of M-C11 (trigger drift). The initial run against v1.6.1 caught 111 drift findings — all fixed as part of the v1.7.0 release before the check was merged into the rubric. v1.7.0 is the first release to pass M-C11 cleanly.
 
 When `check-commit-completeness.sh` is active (recommended in the methodology repo), any Critical failure here will also block the next `git commit` — there is no path to shipping a broken release short of the documented override file.

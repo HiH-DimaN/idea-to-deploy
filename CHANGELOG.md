@@ -7,6 +7,84 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.7.0] — 2026-04-08
+
+Minor release. Closes v1.6.0 deferred item #2: **structural drift detection between SKILL.md bodies and `hooks/check-skills.sh` regex**. Adds `tests/verify_triggers.py` and a new rubric check M-C11. The initial run against the v1.6.1 state caught **111 pre-existing drift findings** that had accumulated silently across v1.2.0–v1.6.1 — all fixed as part of this release before M-C11 was merged into the rubric.
+
+### Added
+
+- **`tests/verify_triggers.py`** — canonical-phrase drift verifier. For each `skills/<name>/SKILL.md` (except `disable-model-invocation: true` skills), it:
+  1. Extracts the `## Trigger phrases` section
+  2. Parses bullet lines, splits on commas, skips meta-descriptions (lines starting with `любой`, `любая`, `автоматически`, etc.) and multi-word descriptions (> 6 words)
+  3. For each canonical phrase, loads `hooks/check-skills.sh` as a Python module (TRIGGERS list), runs every regex against the phrase, and verifies:
+     - At least one regex matches the phrase
+     - The matched hint text mentions `/<skill-name>`
+  4. Emits drift findings as `unmatched` / `wrong-route` / `no-trigger-section`
+  5. Supports `--json` for machine-readable output, used by `tests/meta_review.py`
+
+- **M-C11 (Critical)** in `skills/review/references/meta-review-checklist.md`: "Every canonical trigger phrase in a SKILL.md body routes to the right skill via hooks/check-skills.sh." The meta-review runs `verify_triggers.py` as a subprocess and promotes drift findings to Critical failures (unmatched / wrong-route) or Important warnings (missing trigger section).
+
+- **Meta-review Critical tier** grew from 10 to 11.
+
+### Fixed (111 drift findings, caught by the initial M-C11 run)
+
+The SKILL.md `## Trigger phrases` sections had accumulated phrases over 5 minor releases without the hook regex being updated to match. The initial run flagged 111 findings across 14 skills. Breakdown after filtering meta-descriptions (which shouldn't be in the trigger list at all), fix distribution:
+
+- **18 findings filtered as meta-descriptions** — the verifier's `NOISE_PREFIX_RE` / `NOISE_ANY_RE` / `MAX_PHRASE_WORDS` rules skip phrases that are conditions or documentation rather than literal user input (`"любой запрос на создание законченного работающего продукта"`, `"автоматически перед любым DDL"`, `"multi-file/multi-module exploration"`, etc.). These are legitimate documentation inside the trigger section but shouldn't be part of the regex matching contract.
+
+- **93 findings fixed by expanding hook regex**, distributed across all 14 affected skills. Highlights:
+  - `/blueprint`: `создай документацию для проекта`, `техническое задание`, `PRD`, `design the system`, `system design`
+  - `/debug`: `traceback`, `странное поведение`, `fix this bug`, `troubleshoot`, `log fragment`, `panic`
+  - `/deps-audit`: `package-lock.json audit`, `requirements.txt audit`, `vulnerability scan dependencies`
+  - `/doc`: `обнови README`, `опиши API`, `добавь комментарии`, `(инлайн|inline) комментарии`, `JSDoc`, `docstrings`, `changelog(\.md)?`
+  - `/explain`: `как это работает`, `как устроен`, `что здесь происходит`, `разбери (код|этот|файл|модуль)`, `walkthrough`
+  - `/guide`: `создай гайд`, `сделай cookbook промптов`, `промпты для Claude`, `guide for project`, `cookbook`, `prompt sequence`
+  - `/harden`: `secrets management`, `vault`, `doppler` (added to the /harden regex, removed overlap with /infra)
+  - `/migrate`: `schema change`, `dbmate up`
+  - `/perf`: `лагает`, `N+1`, `утечка памяти`, `memory leak`, `optimize`, `make it faster`, `latency`, `throughput`
+  - `/project`: `сделай сайт`, `новый MVP`, `хочу запустить`, `build a project`, `new (app|service)`
+  - `/refactor`: `перепиши понятнее`, `вынеси в функцию`, `убери дублирование`, `длинная функция`, `глубокая вложенность`, `code smell`, `clean up`, `poor naming`, `magic number`, `god class`
+  - `/review`: `проверь PR`, `найди косяки`, `оцени качество`, `найди баги в коде`, `check quality`, `validate`, `audit`
+  - `/security-audit`: `утечка ключа`, `CORS check`, `CSP check`, `security headers`, `проверь PR на безопасность`, `security review`
+  - `/test`: `нет тестов`, `добавь покрытие`, `coverage`, `юнит-тесты`, `интеграционные тесты`, `регрессионный тест`, `pytest`, `vitest`, `jest`, `go test`, `RSpec`
+
+- **3 remaining findings after the bulk expansion**, fixed individually:
+  - `/doc: "inline комментарии"` — regex had `инлайн\s+комментар` (Cyrillic only). Fixed with `(инлайн|inline)\s+комментар`.
+  - `/explain: "как это работает"` — regex required `как\s+работает` (no intermediate word). Fixed with `как\s+(это\s+)?работает`.
+  - `/explain: "архитектура этого" [wrong-route]` — the phrase matched `/blueprint`'s `архитект` regex. Replaced the phrase in `skills/explain/SKILL.md` with `разбери этот файл` (more literal, routes correctly) and extended the `/explain` regex to cover `разбер\w+\s+(код|этот|файл|модуль)`.
+
+- **Curated away (one phrase)** — `архитектура этого` was removed from `skills/explain/SKILL.md` because it was ambiguous and genuinely belonged to `/blueprint` territory, not `/explain`. The replacement `разбери этот файл` is a cleaner literal phrase.
+
+Final drift count: **0**. Meta-review: PASSED (0 Critical, 0 Important) including the new M-C11 check.
+
+### Changed
+
+- **`tests/meta_review.py`** — new M-C11 block that runs `verify_triggers.py --json` as a subprocess and promotes its findings into the rubric report.
+- **`skills/review/references/meta-review-checklist.md`** — new M-C11 section with binary criterion, failure modes, verification script reference, action-on-fail guidance, and the v1.7.0 note explaining the 111-finding backlog.
+- **`hooks/check-skills.sh`** — every skill's trigger regex extended to cover all canonical phrases from its SKILL.md body. The file grew from 14 TRIGGER entries to 14 (same count, each one larger). Net change: +~60 lines.
+- **`skills/explain/SKILL.md`** — `архитектура этого` replaced with `разбери этот файл`.
+- **`plugin.json`** 1.6.1 → 1.7.0.
+- **`README.md` / `README.ru.md`** badges bumped.
+
+### Philosophy
+
+The v1.4.0 "provision ec2 instance" bug was not a one-off — it was a visible symptom of a systemic problem: trigger phrases lived in two places (SKILL.md body as documentation, hooks/check-skills.sh as code) with no enforcement of consistency. Every time I added or edited a trigger, I had to update both manually, and twice I forgot. 111 accumulated failures prove this class of bug scales with time-between-fixes.
+
+v1.7.0 solves it structurally: the SKILL.md body is now the canonical source of truth (verified on every meta-review), and any drift from the hook immediately fails Gate 1. The author still writes the regex by hand (no auto-generation — that would lose precision), but the **consistency** between the two sources is machine-verified. Auto-generation of regexes from phrases is deferred until the current model proves insufficient.
+
+### Verified before release
+
+- `python3 tests/verify_triggers.py` — 0 drift findings
+- `python3 tests/meta_review.py --verbose` — PASSED, 0 Critical, 0 Important
+- The four v1.5.1 enforcement hooks were not touched and still pass M-C10.
+- Commit-gate hook validated this release's staged diff — no SKILL.md body edits beyond the `/explain` phrase swap (no new skills, so the per-skill completeness check is a no-op).
+
+### Why this is a minor release not a patch
+
+Adding M-C11 is a new rubric feature, not a bug fix. It introduces a new Critical check. The 111 drift fixes are cleanup *enabled by* the new feature, not the feature itself. Semver: minor.
+
+---
+
 ## [1.6.1] — 2026-04-08
 
 Patch release. Closes v1.6.0 deferred item #1 (M-I7 smoke test expansion) and extracts the meta-review runner from its inline Bash/Python embedding into a real file that future releases can depend on.

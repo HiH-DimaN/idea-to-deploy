@@ -21,7 +21,7 @@ These are the user phrases (Russian and English) that should auto-invoke this sk
 
 - объясни код, как это работает, как устроен, что делает эта функция
 - что здесь происходит, разбери код, расскажи про этот модуль
-- walkthrough, архитектура этого, explain this, how does this work
+- walkthrough, разбери этот файл, explain this, how does this work
 - multi-file/multi-module exploration
 - любой вопрос о существующем коде, не о новом
 
