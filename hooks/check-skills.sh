@@ -18,25 +18,28 @@ import sys
 TRIGGERS = [
     (
         r"(новый\s+проект|создай\s+проект|хочу\s+проект|стартуем\s+проект|"
-        r"начнём\s+проект|приложен|с\s+нуля|новый\s+сайт|новое\s+приложение)",
+        r"начнём\s+проект|приложен|с\s+нуля|новый\s+сайт|новое\s+приложение|"
+        r"start\s+a?\s*project|build\s+(it\s+)?from\s+scratch|end-to-end|kickstart)",
         "🔔 Триггер 'проект/приложение' → используй скилл /project (роутер: "
         "/kickstart полный цикл, /blueprint только планирование, /guide промпты "
         "по готовой документации). Вызови через инструмент Skill ПЕРВЫМ.",
     ),
     (
         r"(\bбаг\b|ошибк|не\s+работает|почини|сломал|крашит|падает|"
-        r"\bкраш\b|exception|stack\s*trace|стектрейс|стек\s*трейс)",
+        r"\bкраш\b|exception|stack\s*trace|стектрейс|стек\s*трейс|"
+        r"debug\s+(this|that|it|error|bug|issue|problem)|fix\s+(this\s+)?error)",
         "🔔 Триггер 'баг/ошибка' → используй скилл /debug "
         "(системная отладка через стек/логи/git). Вызови Skill ПЕРВЫМ.",
     ),
     (
         r"(напиши\s+тест|покрой\s+тест|покрой\s+unit|добавь\s+тест|"
-        r"генери\s+тест|unit\s*test|integration\s*test)",
+        r"генери\s+тест|unit\s*test|integration\s*test|"
+        r"add\s+tests?|write\s+tests?|test\s+this|generate\s+tests?)",
         "🔔 Триггер 'тесты' → используй скилл /test или субагента test-generator.",
     ),
     (
         r"(тормозит|медлен|оптимиз|производительност|\bperf\b|bottleneck|"
-        r"узкое\s+место)",
+        r"узкое\s+место|optimize\s+(performance|this|speed)|slow\s+(down|query|endpoint))",
         "🔔 Триггер 'производительность' → используй /perf или perf-analyzer.",
     ),
     (
@@ -45,12 +48,14 @@ TRIGGERS = [
         "🔔 Триггер 'рефакторинг' → используй скилл /refactor.",
     ),
     (
-        r"(объясни\s+(код|как|что)|как\s+работает|что\s+делает|разбер\w+\s+как)",
+        r"(объясни\s+(код|как|что)|как\s+работает|что\s+делает|разбер\w+\s+как|"
+        r"explain\s+(this|that|how|what|code)|how\s+does\s+this\s+work|walk\s+me\s+through)",
         "🔔 Триггер 'объясни' → используй /explain (диаграммы + пошаговый разбор).",
     ),
     (
         r"(напиши\s+документ|создай\s+readme|задокумент|api\s+docs?|"
-        r"инлайн\s+комментар|сгенери\s+doc)",
+        r"инлайн\s+комментар|сгенери(руй)?\s+(документ|doc|readme)|"
+        r"generate\s+(readme|docs?|documentation)|write\s+docs?|add\s+docstrings?)",
         "🔔 Триггер 'документация' → используй /doc или субагента doc-writer.",
     ),
     (
@@ -63,8 +68,8 @@ TRIGGERS = [
         "🔔 Триггер 'планирование/архитектура' → используй /blueprint или architect.",
     ),
     (
-        r"(сгенери\s+гайд|сгенерируй\s+промпт|claude\s+code\s+guide|"
-        r"пошаговые\s+промпты)",
+        r"(сгенери(руй)?\s+(гайд|guide)|сгенерируй\s+промпт|claude\s+code\s+guide|"
+        r"пошаговые\s+промпты|generate\s+(a\s+)?guide|step-by-step\s+prompts?)",
         "🔔 Триггер 'guide' → используй /guide (генерирует CLAUDE_CODE_GUIDE.md).",
     ),
     (

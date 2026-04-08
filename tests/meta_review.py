@@ -1,0 +1,344 @@
+#!/usr/bin/env python3
+"""
+Meta-review runner — inline implementation of `/review --self` for the
+idea-to-deploy methodology repo.
+
+Runs the binary rubric from `skills/review/references/meta-review-checklist.md`
+against the current working tree and exits non-zero on BLOCKED status.
+
+This is the persistent version of the inline Python block that v1.4.0-v1.6.0
+runs embedded in git-commit commands. Moving it into a real file gives us:
+
+1. A single source of truth for the rubric implementation (instead of
+   re-typing it every release).
+2. A drop-in entry point for a future CI workflow (`.github/workflows/
+   meta-review.yml`), which is the v1.6.0-deferred item #3. If/when that
+   need arises (see CHANGELOG [1.6.1] for the detection criteria), the
+   workflow's only step is `python3 tests/meta_review.py`.
+3. Coverage expansion for M-I7 — the smoke test now exercises every one
+   of the 16 skills, not just a representative subset of 10. This closes
+   the v1.6.0-deferred item #1.
+
+Usage:
+    python3 tests/meta_review.py              # run full rubric, exit non-zero on BLOCKED
+    python3 tests/meta_review.py --verbose    # also list Important (warn) failures
+    python3 tests/meta_review.py --check-only # exit 0/1, no human-readable output
+
+Exit codes:
+    0 — PASSED or PASSED_WITH_WARNINGS
+    1 — BLOCKED (at least one Critical failure)
+    2 — internal error (rubric file missing, etc.)
+"""
+from __future__ import annotations
+
+import argparse
+import importlib.util
+import json
+import re
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+
+# --------------------------------------------------------------------------
+# Configuration
+# --------------------------------------------------------------------------
+
+# Representative Russian + English trigger phrases per skill, used by the
+# M-I7 smoke test. At least one phrase per skill — add more here when new
+# skills are added to the methodology.
+SMOKE_TRIGGERS: list[tuple[str, str]] = [
+    # (phrase, expected skill slug)
+    ("новый проект", "project"),
+    ("start a project", "project"),
+    ("почини баг", "debug"),
+    ("debug this error", "debug"),
+    ("напиши тесты", "test"),
+    ("add tests", "test"),
+    ("отрефактори", "refactor"),
+    ("refactor this", "refactor"),
+    ("объясни код", "explain"),
+    ("explain how this works", "explain"),
+    ("сгенери документацию", "doc"),
+    ("generate readme", "doc"),
+    ("проверь документацию", "review"),
+    ("code review", "review"),
+    ("тормозит", "perf"),
+    ("optimize performance", "perf"),
+    ("спланируй проект", "blueprint"),
+    ("blueprint architecture", "blueprint"),
+    ("сгенерируй гайд", "guide"),
+    ("claude code guide", "guide"),
+    ("проверь безопасность", "security-audit"),
+    ("security audit", "security-audit"),
+    ("накати миграцию", "migrate"),
+    ("apply migration", "migrate"),
+    ("проверь зависимости", "deps-audit"),
+    ("dependency audit", "deps-audit"),
+    ("подготовь к продакшену", "harden"),
+    ("production readiness", "harden"),
+    ("сгенерируй terraform", "infra"),
+    ("helm chart", "infra"),
+    # /kickstart has `disable-model-invocation: true`, no trigger required —
+    # it is reached via /project router. Deliberately not in this list.
+]
+
+
+# --------------------------------------------------------------------------
+# Helpers
+# --------------------------------------------------------------------------
+
+def find_repo_root(start: Path) -> Path:
+    for parent in [start, *start.parents]:
+        if (parent / ".claude-plugin" / "plugin.json").exists():
+            return parent
+    raise SystemExit("error: not inside an idea-to-deploy repo (no .claude-plugin/plugin.json found)")
+
+
+def read_frontmatter(path: Path) -> tuple[dict, str]:
+    if not path.exists():
+        return {}, ""
+    text = path.read_text(encoding="utf-8", errors="replace")
+    fm: dict[str, str] = {}
+    body = text
+    if text.startswith("---\n"):
+        end = text.find("\n---\n", 4)
+        if end > 0:
+            for line in text[4:end].splitlines():
+                if ":" in line and not line.lstrip().startswith("#"):
+                    k, _, v = line.partition(":")
+                    fm[k.strip()] = v.strip().strip("'\"")
+            body = text[end + 5:]
+    return fm, body
+
+
+def load_hook_module(hook_path: Path):
+    """check-skills.sh is a .sh file by convention but actually Python —
+    load it as a module so the TRIGGERS list is introspectable."""
+    tmp = Path("/tmp") / f"_cs_import_{hook_path.stem}.py"
+    shutil.copy(hook_path, tmp)
+    spec = importlib.util.spec_from_file_location("_cs_import", tmp)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"failed to load {hook_path}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+# --------------------------------------------------------------------------
+# Rubric checks
+# --------------------------------------------------------------------------
+
+class Report:
+    def __init__(self) -> None:
+        self.critical: list[str] = []
+        self.important: list[str] = []
+        self.nice: list[str] = []
+
+    def crit(self, check: str, msg: str) -> None:
+        self.critical.append(f"{check}: {msg}")
+
+    def imp(self, check: str, msg: str) -> None:
+        self.important.append(f"{check}: {msg}")
+
+    def info(self, check: str, msg: str) -> None:
+        self.nice.append(f"{check}: {msg}")
+
+    @property
+    def status(self) -> str:
+        if self.critical:
+            return "BLOCKED"
+        if self.important:
+            return "PASSED_WITH_WARNINGS"
+        return "PASSED"
+
+
+def run_rubric(repo: Path) -> Report:
+    r = Report()
+
+    plugin_json = repo / ".claude-plugin" / "plugin.json"
+    plugin = json.loads(plugin_json.read_text(encoding="utf-8"))
+    plugin_ver = plugin["version"]
+
+    skills_dir = repo / "skills"
+    skills = sorted([p.name for p in skills_dir.iterdir() if p.is_dir()])
+
+    hook_file = repo / "hooks" / "check-skills.sh"
+    hook_text = hook_file.read_text(encoding="utf-8") if hook_file.exists() else ""
+
+    readme_en = (repo / "README.md").read_text(encoding="utf-8")
+    readme_ru = (repo / "README.ru.md").read_text(encoding="utf-8")
+    changelog = (repo / "CHANGELOG.md").read_text(encoding="utf-8")
+
+    # --- M-C5: version consistency ---
+    if f"Version-{plugin_ver}" not in readme_en:
+        r.crit("M-C5", f"README.md badge does not match plugin.json version {plugin_ver}")
+    if f"Version-{plugin_ver}" not in readme_ru:
+        r.crit("M-C5", f"README.ru.md badge does not match plugin.json version {plugin_ver}")
+
+    # --- M-C6: CHANGELOG entry for current version ---
+    if f"[{plugin_ver}]" not in changelog:
+        r.crit("M-C6", f"CHANGELOG.md has no [{plugin_ver}] entry")
+
+    # --- M-C7: badge counts match reality ---
+    skills_badge = re.search(r"Skills-(\d+)-green", readme_en)
+    if not skills_badge or int(skills_badge.group(1)) != len(skills):
+        actual = skills_badge.group(1) if skills_badge else "?"
+        r.crit("M-C7", f"README.md Skills badge is {actual}, actual count is {len(skills)}")
+
+    fixtures_dir = repo / "tests" / "fixtures"
+
+    # --- Per-skill checks (M-C1, M-C2, M-C3, M-C4, M-C8 + M-I1..M-I4) ---
+    for skill in skills:
+        sd = skills_dir / skill
+        fm, body = read_frontmatter(sd / "SKILL.md")
+
+        # M-C1: required frontmatter
+        for field in ("name", "description", "license"):
+            if field not in fm:
+                r.crit("M-C1", f"/{skill} missing frontmatter field '{field}'")
+
+        # M-C2: references folder if referenced
+        if "references/" in body:
+            refs = sd / "references"
+            if not refs.is_dir() or not any(refs.iterdir()):
+                r.crit("M-C2", f"/{skill} mentions `references/` but folder is missing or empty")
+
+        # M-C3: trigger in hook (unless disable-model-invocation)
+        if fm.get("disable-model-invocation", "").lower() != "true":
+            if f"/{skill}" not in hook_text:
+                r.crit("M-C3", f"/{skill} has no mention in hooks/check-skills.sh")
+
+        # M-C4: at least one fixture
+        found = any(skill in p.name for p in fixtures_dir.iterdir() if p.is_dir())
+        if not found:
+            for p in fixtures_dir.iterdir():
+                if not p.is_dir():
+                    continue
+                notes = p / "notes.md"
+                if notes.exists() and re.search(
+                    rf"(^|[^-a-z]){re.escape(skill)}([^-a-z]|$)",
+                    notes.read_text(encoding="utf-8", errors="replace"),
+                    re.M,
+                ):
+                    found = True
+                    break
+        if not found:
+            r.crit("M-C4", f"/{skill} has no matching fixture")
+
+        # M-C8: Troubleshooting section
+        if "## Troubleshooting" not in body:
+            r.crit("M-C8", f"/{skill} missing ## Troubleshooting section")
+
+        # M-I1: Recommended model section
+        if "## Recommended model" not in body:
+            r.imp("M-I1", f"/{skill} missing ## Recommended model section")
+
+        # M-I2: at least 2 examples
+        if body.count("### Example") < 2:
+            r.imp("M-I2", f"/{skill} has fewer than 2 examples")
+
+        # M-I3: allowed-tools declared
+        if "allowed-tools" not in fm:
+            r.imp("M-I3", f"/{skill} missing allowed-tools in frontmatter")
+
+        # M-I4: in README Skill Contracts
+        if f"`/{skill}`" not in readme_en:
+            r.imp("M-I4", f"/{skill} not in README.md")
+
+    # --- M-I7: hook trigger smoke test (expanded to cover all 16 skills) ---
+    try:
+        hook_module = load_hook_module(hook_file)
+        for phrase, expected in SMOKE_TRIGGERS:
+            lp = phrase.lower()
+            hits = [hint for pat, hint in hook_module.TRIGGERS if re.search(pat, lp)]
+            if not any(expected in h.lower() for h in hits):
+                r.imp("M-I7", f"phrase '{phrase}' does not route to /{expected}")
+    except Exception as e:
+        r.imp("M-I7", f"could not load hook module: {e}")
+
+    # --- M-C10: hook schema + exit code compliance ---
+    events_spec = {
+        "PreToolUse":       {"perm_decision_required": True,  "may_block": True},
+        "PostToolUse":      {"perm_decision_required": False, "may_block": False},
+        "UserPromptSubmit": {"perm_decision_required": False, "may_block": True},
+        "Stop":             {"perm_decision_required": False, "may_block": True},
+        "SubagentStop":     {"perm_decision_required": False, "may_block": True},
+        "Notification":     {"perm_decision_required": False, "may_block": False},
+        "PreCompact":       {"perm_decision_required": False, "may_block": False},
+        "SessionStart":     {"perm_decision_required": False, "may_block": False},
+    }
+    for hook in sorted((repo / "hooks").glob("*.sh")):
+        text = hook.read_text(encoding="utf-8")
+        events = sorted(set(re.findall(r'"hookEventName"\s*:\s*"([A-Za-z]+)"', text)))
+        if len(events) != 1:
+            # Some hooks (check-skills.sh) emit one event from a helper — allow inference
+            if len(events) == 0 and "UserPromptSubmit" in text:
+                events = ["UserPromptSubmit"]
+            if len(events) != 1:
+                r.crit("M-C10", f"{hook.name}: ambiguous event type ({events})")
+                continue
+        event = events[0]
+        if event not in events_spec:
+            r.crit("M-C10", f"{hook.name}: unknown event '{event}'")
+            continue
+        if event == "PreToolUse":
+            if re.search(r'(?<!permission)[\'"]decision[\'"]\s*:', text):
+                r.crit("M-C10", f"{hook.name} (PreToolUse): uses root 'decision' instead of hookSpecificOutput.permissionDecision")
+        if event == "PostToolUse":
+            claims_block = re.search(
+                r"prevent.*tool|block.*tool\s+call|stop.*write.*from\s+landing|physically\s+prevent",
+                text,
+                re.IGNORECASE,
+            )
+            has_disclaimer = re.search(
+                r"non-?blocking|already\s+ran|cannot\s+undo|after\s+the\s+tool",
+                text,
+                re.IGNORECASE,
+            )
+            if claims_block and not has_disclaimer:
+                r.crit("M-C10", f"{hook.name} (PostToolUse): docstring claims to block, but PostToolUse is non-blocking per spec")
+        if event == "UserPromptSubmit":
+            if "permissionDecision" in text:
+                r.crit("M-C10", f"{hook.name} (UserPromptSubmit): uses permissionDecision, which is PreToolUse schema")
+
+    return r
+
+
+# --------------------------------------------------------------------------
+# Entry point
+# --------------------------------------------------------------------------
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Run the idea-to-deploy meta-review rubric")
+    parser.add_argument("--verbose", "-v", action="store_true", help="list Important failures too")
+    parser.add_argument("--check-only", action="store_true", help="no output, just exit code")
+    args = parser.parse_args()
+
+    here = Path(__file__).resolve().parent
+    repo = find_repo_root(here)
+
+    try:
+        report = run_rubric(repo)
+    except Exception as e:
+        print(f"error running rubric: {e}", file=sys.stderr)
+        return 2
+
+    if not args.check_only:
+        print(f"=== META-REVIEW (idea-to-deploy @ {repo}) ===")
+        print(f"Critical ({len(report.critical)}):")
+        for e in report.critical:
+            print(f"  ❌ {e}")
+        if args.verbose or report.important:
+            print(f"Important ({len(report.important)}):")
+            for e in report.important:
+                print(f"  ⚠️  {e}")
+        print()
+        print(f"FINAL STATUS: {report.status}")
+
+    return 0 if report.status != "BLOCKED" else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

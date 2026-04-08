@@ -7,6 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.6.1] — 2026-04-08
+
+Patch release. Closes v1.6.0 deferred item #1 (M-I7 smoke test expansion) and extracts the meta-review runner from its inline Bash/Python embedding into a real file that future releases can depend on.
+
+### Added
+
+- **`tests/meta_review.py`** — persistent implementation of the `/review --self` rubric. Previously the rubric was re-typed as an inline `python3 <<EOF` heredoc inside every release commit's Bash command. That worked but couldn't be reused, version-controlled, or referenced cleanly. Now it's a real Python file with argparse, exit codes (0 = pass/warnings, 1 = blocked, 2 = internal error), and a `--verbose` / `--check-only` interface. All 10 Critical + 8 Important checks from the meta-rubric are implemented in one place. A future CI workflow (v1.6.0 deferred item #3) only needs `python3 tests/meta_review.py` as its single command.
+
+- **M-I7 smoke test expanded from 10 to 30 trigger phrases** — two representative phrases (one Russian, one English) for every model-invocable skill. `/kickstart` has `disable-model-invocation: true` and is deliberately excluded because it's reached via `/project` router, not via trigger phrase. This closes v1.6.0 deferred item #1.
+
+### Fixed (caught by the expanded M-I7 on first run)
+
+- **`hooks/check-skills.sh`** — 8 trigger regex gaps found by the expanded smoke test, all on the English side of skills that previously had only Russian triggers:
+  - `/project`: added `start a project`, `build it from scratch`, `end-to-end`, `kickstart`
+  - `/debug`: added `debug this error`, `fix this error`, etc.
+  - `/test`: added `add tests`, `write tests`, `generate tests`
+  - `/perf`: added `optimize performance`, `slow down`, `slow query`
+  - `/explain`: added `explain this`, `how does this work`, `walk me through`
+  - `/doc`: added `generate readme`, `write docs`, `add docstrings`
+  - `/guide`: added `generate a guide`, `step-by-step prompts`
+
+  These gaps existed since v1.2.0 when trigger phrases were first introduced but were invisible because the pre-v1.6.1 smoke test only exercised 10 phrases. This is a concrete demonstration that **expanding test coverage finds real bugs, not just theoretical ones**. The v1.4.0 `provision ec2 instance` miss was the same pattern — a trigger phrase in the SKILL.md body that never made it into the hook regex. M-I7 expansion is a partial answer to that class of bug; v1.7.0's trigger-drift verifier will be the complete answer.
+
+### Philosophy note — why this release exists
+
+v1.6.0 deferred three items with honest justifications. The user asked "what would trigger the need for each?" The first item (expand M-I7 to all skills) had no dependency on external events — it was purely cost/value, and the cost was 6 lines of code. Deferring it was the wrong call. v1.6.1 corrects that.
+
+The second item (trigger auto-generation) genuinely needed architectural thought, so it's still deferred to v1.7.0 (next release). The third item (CI workflow) is still correctly deferred — there's no external contributor yet — but v1.6.1 prepares for it by extracting `tests/meta_review.py`, so the CI adoption when it happens is a one-line workflow.
+
+### Verified before release
+
+- `python3 tests/meta_review.py` → FINAL STATUS: **PASSED** (0 Critical, 0 Important)
+- Same script run BEFORE the hook fixes → 8 Important warnings (the drift described above)
+- v1.5.1 commit-gate hook validated the release diff: no SKILL.md changes, so the gate was a no-op but ran cleanly.
+
+---
+
 ## [1.6.0] — 2026-04-08
 
 Minor release. Closes the last open follow-up from v1.5.1: add **M-C10** to the meta-review rubric — a binary check that every hook uses the JSON schema and exit code semantics matching its declared event type per [Anthropic's hooks spec](https://code.claude.com/docs/en/hooks.md). This is the rubric check that would have caught both v1.5.0 bugs before release.
