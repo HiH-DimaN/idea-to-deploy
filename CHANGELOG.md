@@ -7,6 +7,64 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.6.0] — 2026-04-08
+
+Minor release. Closes the last open follow-up from v1.5.1: add **M-C10** to the meta-review rubric — a binary check that every hook uses the JSON schema and exit code semantics matching its declared event type per [Anthropic's hooks spec](https://code.claude.com/docs/en/hooks.md). This is the rubric check that would have caught both v1.5.0 bugs before release.
+
+### Added
+
+- **M-C10 (Critical) in `skills/review/references/meta-review-checklist.md`** — "Every hook uses the JSON schema and exit code semantics matching its declared event type."
+
+  The check parses each `hooks/*.sh` file, extracts its declared `hookEventName` literal, and cross-references the JSON field structure and exit-code claims against a table of known Anthropic hook events (`PreToolUse`, `PostToolUse`, `UserPromptSubmit`, `Stop`, `SubagentStop`, `Notification`, `PreCompact`, `SessionStart`). Flags two specific anti-patterns as Critical failures:
+
+  1. A `PostToolUse` hook whose docstring or comments claim to "block" or "prevent" the tool call. Per spec, PostToolUse runs *after* the tool result exists — its `decision: "block"` field only sends feedback to Claude, it cannot physically undo a Write. Hooks that need prevention semantics must be `PreToolUse`.
+  2. A `PreToolUse` hook that emits a root-level `decision` field instead of `hookSpecificOutput.permissionDecision`. The root-level `decision` field belongs to the `PostToolUse` schema; in `PreToolUse` it is silently dropped by the schema validator.
+
+  The rubric entry includes the full allowed-field matrix per event, a runnable Python verification script, and a worked example pointing to the v1.5.1 commit as a reference fix.
+
+- **Meta-review Critical tier count** in the rubric's reporting template increased from 9/9 to 10/10 to reflect M-C10.
+
+### Changed
+
+- **`plugin.json`** version 1.5.1 → 1.6.0.
+- **`README.md` / `README.ru.md`** badges bumped to 1.6.0.
+- **`CHANGELOG.md`** new `[1.6.0]` entry (this one).
+
+### Verified before release
+
+**Gate 1 was run inline with M-C10 active** against all 4 current hooks:
+
+| Hook | Declared event | Schema compliance | Exit code semantics | M-C10 |
+|---|---|---|---|---|
+| `check-skills.sh` | `UserPromptSubmit` | ✅ uses `hookSpecificOutput.additionalContext` | exit 0 only (never rejects) | ✅ |
+| `check-tool-skill.sh` | `PreToolUse` | ✅ uses `hookSpecificOutput.additionalContext`, no decision field | exit 0 only (soft reminder) | ✅ |
+| `check-skill-completeness.sh` | `PreToolUse` | ✅ uses `hookSpecificOutput.permissionDecision: "deny"` with `permissionDecisionReason` | exit 2 on violation (blocks Write) | ✅ |
+| `check-commit-completeness.sh` | `PreToolUse` | ✅ uses `hookSpecificOutput.permissionDecision: "deny"` with `permissionDecisionReason` | exit 2 on violation (blocks Bash git commit) | ✅ |
+
+All 4 hooks pass M-C10 in the v1.6.0 release state. The check was designed specifically against the v1.5.0 failure modes — running it on v1.5.0 pre-fix state would have flagged both `check-skill-completeness.sh` (wrong event type: PostToolUse claiming to block) and `check-commit-completeness.sh` (wrong field location: root `decision` in PreToolUse).
+
+### Why this is a minor release, not a patch
+
+Patch releases (v1.5.1) fix bugs in existing features. This release adds a *new rubric check* — a new feature, not a bugfix. The feature has real impact: it converts "the v1.5.0 bugs would have been caught by a properly-designed rubric" from a retrospective claim into a preventive mechanism. Semver says that's a minor bump.
+
+### Rubric evolution loop now closed
+
+- v1.4.0: first self-extension → Potemkin skills (references declared, not created)
+- v1.4.1: content fix
+- v1.5.0: first enforcement hooks → Potemkin enforcement (wrong schemas per spec)
+- v1.5.1: content fix (hooks moved to correct event types and schemas)
+- v1.6.0: **rubric learns to catch the v1.5.0 class of bug**
+
+Each release taught the rubric something new. v1.6.0 is the first release where the rubric catches the bug that broke its own predecessor — meta-verification has closed a full cycle. The v1.4→v1.6 sequence is a concrete case study in "the rubric matures through use, not through top-down design" (from the v1.5.1 CHANGELOG philosophy note).
+
+### Not done in this release
+
+- **M-I7 expansion** to smoke-test all 16 skill triggers (currently 10). Cosmetic, deferred.
+- **Automated trigger extraction** from `## Trigger phrases` sections of skill bodies into `check-skills.sh`. Would reduce the surface area for v1.4.0-style bugs even further. Deferred to v1.7.0 or later.
+- **CI workflow** (`.github/workflows/meta-review.yml`) running `/review --self` on every PR. Deferred because the inline Python implementation is already running in-process during commits.
+
+---
+
 ## [1.5.1] — 2026-04-08
 
 Patch release. Fixes two spec-compliance bugs in the v1.5.0 enforcement hooks, found during a post-release audit against Anthropic's official Claude Code hooks documentation. The short version: v1.5.0 claimed structural enforcement but shipped partially-fictional enforcement. v1.5.1 makes it real.

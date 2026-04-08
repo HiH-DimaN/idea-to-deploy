@@ -39,6 +39,96 @@ If any of 1–3 disagree → fail.
 ### M-C9. No skill file has been Write'n in the current working state without its supporting artifacts on disk
 **Criterion:** git-staged `skills/*/SKILL.md` → matching `references/` (if referenced in body), trigger in hook, fixture in tests/fixtures — all staged OR already committed. This mirrors the `check-commit-completeness.sh` hook logic; the meta-review runs the same check so the state can be audited without committing.
 
+### M-C10. Every hook uses the JSON schema and exit code semantics matching its declared event type
+**Added in v1.6.0 — closes the v1.5.0 blind spot.**
+
+**Criterion (binary, static analysis):** for each file under `hooks/*.sh` (all four hooks are Python despite the `.sh` extension), read the file and verify:
+
+1. **Declared event type** — the file contains exactly one `"hookEventName"` string literal (in an emit function or JSON dict). That literal is the declared event.
+2. **Field location matches event** — the JSON output structure matches Anthropic's hook-event-specific schema per [the hooks reference](https://code.claude.com/docs/en/hooks.md):
+
+| Event | Blocking exit code | Decision field location | Allowed decision values | Reason field |
+|---|---|---|---|---|
+| `PreToolUse` | 2 (blocks tool) | `hookSpecificOutput.permissionDecision` | `allow`, `deny`, `ask`, `defer` | `hookSpecificOutput.permissionDecisionReason` |
+| `PostToolUse` | **Non-blocking** — tool already ran | root `decision` (feedback only) | `block` | root `reason` |
+| `UserPromptSubmit` | 2 (rejects prompt) | root `decision` (optional) | `block` | root `reason`, plus `hookSpecificOutput.additionalContext` allowed |
+| `Stop` / `SubagentStop` | 2 (prevents stop) | root `decision` (optional) | `block` | root `reason` |
+| `Notification` | — | — | — | `hookSpecificOutput.additionalContext` |
+| `PreCompact` / `SessionStart` | — | — | — | `hookSpecificOutput.additionalContext` |
+
+3. **Anti-patterns that MUST fail M-C10:**
+   - A `PostToolUse` hook whose **docstring or comments claim to "prevent", "block the tool call", or "stop the write from landing on disk"**. Per spec, PostToolUse runs AFTER the tool result is produced — its `decision: "block"` only feeds the reason back to Claude, it cannot undo the effect. If that's the desired behavior, the hook belongs in `PreToolUse`.
+   - A `PreToolUse` hook that emits a **root-level `decision` field** instead of `hookSpecificOutput.permissionDecision`. The root-level field belongs to `PostToolUse` schema; in `PreToolUse` it is silently dropped by the schema validator.
+   - A `PreToolUse` hook that emits `permissionDecision` with a value outside `{allow, deny, ask, defer}`.
+   - Any hook that declares one `hookEventName` literal but uses field names from a different event's schema.
+
+4. **Verification procedure** (runnable as a Python script inside the meta-review):
+   ```python
+   import re
+   from pathlib import Path
+
+   EVENTS = {
+       "PreToolUse": {
+           "decision_path": "hookSpecificOutput.permissionDecision",
+           "root_decision_forbidden": True,
+           "may_block": True,
+       },
+       "PostToolUse": {
+           "decision_path": "root.decision",
+           "root_decision_forbidden": False,
+           "may_block": False,  # tool already ran
+       },
+       "UserPromptSubmit": {
+           "decision_path": "root.decision",
+           "root_decision_forbidden": False,
+           "may_block": True,  # blocks prompt
+       },
+       "Stop": {"decision_path": "root.decision", "root_decision_forbidden": False, "may_block": True},
+       "SubagentStop": {"decision_path": "root.decision", "root_decision_forbidden": False, "may_block": True},
+       "Notification": {"decision_path": None, "root_decision_forbidden": True, "may_block": False},
+       "PreCompact": {"decision_path": None, "root_decision_forbidden": True, "may_block": False},
+       "SessionStart": {"decision_path": None, "root_decision_forbidden": True, "may_block": False},
+   }
+
+   def check_hook(path: Path) -> list[str]:
+       text = path.read_text()
+       errors = []
+       events = re.findall(r'"hookEventName"\s*:\s*"([A-Za-z]+)"', text)
+       events = list(set(events))
+       if len(events) != 1:
+           errors.append(f"{path.name}: declares {len(events)} event types, expected exactly 1")
+           return errors
+       event = events[0]
+       if event not in EVENTS:
+           errors.append(f"{path.name}: unknown event '{event}'")
+           return errors
+       spec = EVENTS[event]
+       has_perm_decision = "permissionDecision" in text
+       # Root-level decision: line starts with "decision" inside a dict literal, NOT inside hookSpecificOutput
+       # Heuristic: find every `"decision"` string that is NOT preceded by permissionDecision in the same block.
+       root_dec = bool(re.search(r'(?<!permission)[\'"]decision[\'"]\s*:', text))
+       if event == "PreToolUse":
+           if not has_perm_decision and ("decision" in text):
+               errors.append(
+                   f"{path.name} ({event}): uses top-level 'decision' — should be "
+                   f"hookSpecificOutput.permissionDecision per Anthropic spec"
+               )
+       if event == "PostToolUse":
+           # Spec anti-pattern: PostToolUse claiming to block the tool
+           if re.search(r"block(s)?\s+(the\s+)?(tool|write|call|edit)", text, re.IGNORECASE):
+               # Check if there's a disclaimer acknowledging non-blocking behavior
+               if not re.search(r"non-?blocking|already\s+ran|cannot\s+undo", text, re.IGNORECASE):
+                   errors.append(
+                       f"{path.name} ({event}): docstring claims to block the tool, "
+                       f"but PostToolUse exit 2 is non-blocking per spec"
+                   )
+       return errors
+   ```
+
+**Action on fail:** move the hook to the correct event (usually `PostToolUse` → `PreToolUse` if the goal is prevention) AND fix the JSON field path. Both fixes together — one without the other is still broken. See v1.5.1 commit for a worked example.
+
+**Why this check exists:** v1.5.0 shipped two hooks — `check-skill-completeness.sh` (PostToolUse with `decision: "block"`, advertised as hard-blocking) and `check-commit-completeness.sh` (PreToolUse with root-level `decision: "deny"`). Both were wrong per Anthropic's spec. Neither was caught by the v1.5.0 meta-review because the rubric checked structural completeness (hook exists, references correct event name), not spec compliance (field paths, exit code semantics per event). v1.6.0 adds M-C10 so the next hook-related mistake cannot repeat the same blind spot.
+
 ---
 
 ## Tier 2: Important (warn but pass)
@@ -101,7 +191,7 @@ Same as the standard `/review` rubric — tier-by-tier list with ✅/❌/⚠️/
 ### Summary
 | Tier | Pass | Total | Status |
 |---|---|---|---|
-| Critical | 8 | 9 | ❌ BLOCKED |
+| Critical | 9 | 10 | ❌ BLOCKED |
 | Important | 6 | 8 | ⚠️ |
 | Nice-to-have | 3 | 4 | ℹ️ |
 
@@ -109,5 +199,7 @@ Same as the standard `/review` rubric — tier-by-tier list with ✅/❌/⚠️/
 **Must fix before commit:**
 1. [M-C2] skills/foo/references/foo-checklist.md
 ```
+
+> **v1.6.0 note:** the Critical tier grew from 9 to 10 checks with the addition of M-C10 (hook schema compliance). All 4 hooks in the v1.6.0 methodology repo pass M-C10; the check was validated on the v1.5.1 post-fix state before being merged into the rubric.
 
 When `check-commit-completeness.sh` is active (recommended in the methodology repo), any Critical failure here will also block the next `git commit` — there is no path to shipping a broken release short of the documented override file.
