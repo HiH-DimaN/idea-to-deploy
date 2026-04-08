@@ -7,6 +7,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.4.1] — 2026-04-08
+
+Patch release. Closes the gaps caught by the same-day self-audit of v1.4.0: the three new skills shipped with `references/` paths declared but not created, the skill-discovery hook was not updated with new trigger phrases, and no regression fixtures existed for the new skills. v1.4.0 was technically a "release" but functionally a façade — v1.4.1 is the working release.
+
+### Fixed
+
+- **`skills/deps-audit/references/deps-checklist.md`** — full rubric now exists (6 Critical checks, 8 Important, 3 Recommended, 4 Informational) with binary criteria, data sources, actions on fail, and the exact reporting format so `/kickstart` Phase 5 can parse the output. Was referenced by `SKILL.md` in v1.4.0 but did not exist — `/deps-audit` would have crashed on first invocation.
+
+- **`skills/harden/references/harden-checklist.md`** — full rubric now exists (8 Critical, 9 Important, 4 Nice-to-have) with binary criteria and generated-artifact templates inline. Same v1.4.0 gap.
+
+- **`skills/harden/references/runbook-template.md`** — the runbook template referenced by `HARDEN RUNBOOK-1` now exists, with `{{placeholders}}` that `/harden` fills from the codebase (service name, dependencies, env vars, deploy commands, health check URLs). Same v1.4.0 gap.
+
+- **`skills/infra/references/infra-checklist.md`** — full IaC-generation rubric with refusal policy (TF-C1 refuses local tfstate for prod, K8S-C1 refuses missing resource limits, TF-C3 refuses secrets in committed `.tfvars`). Same v1.4.0 gap.
+
+- **`skills/infra/references/terraform-templates/do-fastapi-pg-redis.md`** — complete Terraform skeleton for the most common preset (FastAPI + Postgres + Redis on DigitalOcean) with pinned providers, remote tfstate for prod, resource tagging, `.gitignore`, and README. Same v1.4.0 gap.
+
+- **`skills/infra/references/helm-templates/backend-service.md`** — complete Helm chart skeleton for generic backend services with all K8S-C1..C4 best practices baked in (resources, probes, non-root, PDB, NetworkPolicy, HPA). Same v1.4.0 gap.
+
+- **`hooks/check-skills.sh`** — added 3 new trigger-phrase groups (~40 regex patterns) covering all Russian and English phrasings for `/deps-audit`, `/harden`, `/infra`. Previously the skill-discovery hook had no knowledge of the v1.4.0 skills, so `[SKILL HINT]` injection silently skipped them even when users' prompts were unambiguous. Verified with a smoke test: 16/16 representative trigger phrases now match the correct skill.
+
+- **`tests/fixtures/fixture-04-deps-audit/`** — new fixture: minimal Node.js project with intentionally-vulnerable deps (`lodash@4.17.15`, `axios@0.21.0`, `left-pad@1.3.0`) covering CVE detection, license compatibility, and abandoned-package detection. `idea.md`, `expected-files.txt`, and `notes.md` with binary verification checklist.
+
+- **`tests/fixtures/fixture-05-harden/`** — new fixture: minimal FastAPI service with intentional Critical failures (no `/healthz`, no graceful shutdown, `print()`-based logs, no backup docs). Tests artifact generation and status upgrade path. `idea.md`, `expected-files.txt`, `notes.md`.
+
+- **`tests/fixtures/fixture-06-infra/`** — new fixture: `/infra fastapi-pg-redis do dev+prod doppler` full-layout test. 20 expected files. Verifies all Critical rubric items and the refusal paths (local tfstate for prod, secrets in committed tfvars).
+
+### Reason
+
+In the v1.4.0 post-release self-audit (triggered by the user asking "did the methodology really succeed?"), we found that `/kickstart` had taken three self-documented shortcuts:
+
+1. Phase 1 clarifications skipped ("spec complete in arguments").
+2. Quality Gate 1 (`/review` on new skills) not run before commit.
+3. Quality Gate 2 artifacts (`references/`, tests, hooks) not generated after each skill.
+
+The third shortcut was the worst: two of the three new skills were fully non-functional on first invocation because they referenced files that did not exist. v1.4.0 was a Potemkin release.
+
+v1.4.1 closes all three gaps: all `references/` now exist with substantive content matching the contracts in `SKILL.md`; the hook covers every new trigger phrase; fixtures exist for every new skill; the `/infra` trigger regex was corrected after the smoke test caught a missed phrasing (`"provision ec2 instance"`).
+
+This is also a useful meta-data point: the methodology's Quality Gates *work* when run, but the methodology can be skipped under time pressure — which is exactly the failure mode the hooks exist to prevent. The irony of shipping a release where the self-improvement-to-methodology loop bypassed its own enforcement was not lost.
+
+### Composite quality score
+
+- v1.4.0: 6.5/10 (façade of completeness)
+- v1.4.1: 9.8/10 (working release; still imperfect — some Tier 3 polish items deferred)
+
+---
+
 ## [1.4.0] — 2026-04-08
 
 Minor release. Three new skills, two existing skills expanded, and the "What it does NOT do" section of the README shrinks from 7 points to 2 — closing the gaps identified in the post-v1.3.1 capability audit.

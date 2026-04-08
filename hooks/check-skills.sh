@@ -90,6 +90,41 @@ TRIGGERS = [
         r"(\bui\b|интерфейс|frontend|дизайн\s+компонент|верстк|\bux\b)",
         "🔔 Триггер 'UI/frontend' → подключи плагин frontend-design.",
     ),
+    (
+        r"(проверь\s+зависимост|проверь\s+пакет|audit\s+deps|"
+        r"dependency\s+audit|dep\s+audit|check\s+dependencies|"
+        r"найди\s+уязвимые\s+пакет|найди\s+cve\s+в\s+зависимост|"
+        r"проверь\s+лицензи|license\s+(check|audit)|"
+        r"lockfile\s+audit|supply\s+chain\s+audit|проверка\s+цепочки\s+поставок|"
+        r"abandoned\s+packages|заброшенные\s+пакет|устаревшие\s+зависимост|"
+        r"\bosv\b|\bghsa\b|github\s+advisory)",
+        "🔔 Триггер 'dependency audit' → используй /deps-audit (read-only проверка CVE/лицензий/заброшенных пакетов, тот же enum статусов что у /review). Вызови Skill ПЕРВЫМ.",
+    ),
+    (
+        r"(подготовь\s+к\s+продакшен|готов\s+ли\s+прод|production\s+readiness|"
+        r"\bharden\b|hardening|production\s+hardening|"
+        r"sre\s+checklist|\brunbook\b|generate\s+runbook|"
+        r"нужен\s+мониторинг|настрой\s+prometheus|настрой\s+grafana|"
+        r"rate\s+limit|ограничен\w+\s+запрос|throttling|"
+        r"graceful\s+shutdown|плавное\s+выключен|"
+        r"load\s+test|нагрузочн\w+\s+тест|\bk6\b|"
+        r"health\s*check|/healthz|liveness|readiness|"
+        r"structured\s+log|structured\s+logs|logs?\s+to\s+json|"
+        r"backup\s+strateg|стратеги\w+\s+бэкап)",
+        "🔔 Триггер 'production hardening' → используй /harden (рубрика health/logs/metrics/backups/load-test/runbook, генерация артефактов с согласия пользователя). Вызови Skill ПЕРВЫМ.",
+    ),
+    (
+        r"(настрой\s+инфраструктур|provision\s+infrastructure|infra\s+as\s+code|"
+        r"\bterraform\b|terraform\s+module|сгенери\w+\s+terraform|"
+        r"\bhelm\b|helm\s+chart|k8s\s+manifests?|kubernetes\s+manifests?|"
+        r"настрой\s+vault|настрой\s+doppler|secrets?\s+manager|"
+        r"provision\s+(servers?|droplet|ec2|instance)|create\s+(droplet|ec2|instance)|"
+        r"\btfstate\b|terraform\s+state|backend\s+s3|"
+        r"\biac\b|infrastructure\s+as\s+code|инфраструктура\s+как\s+код|"
+        r"deploy\s+to\s+(digitalocean|aws|hetzner)|"
+        r"managed\s+kubernetes|\bdoks\b|\beks\b|\bgke\b)",
+        "🔔 Триггер 'infrastructure-as-code' → используй /infra (Terraform/Helm/secrets для DO/AWS/Hetzner/K8s, remote tfstate с локами для prod). Вызови Skill ПЕРВЫМ.",
+    ),
 ]
 
 
