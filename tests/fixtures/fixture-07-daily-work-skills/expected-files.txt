@@ -1,0 +1,5 @@
+debug-report.md
+refactor-diff.patch
+perf-report.md
+security-audit-report.md
+migrate-report.md

@@ -5,7 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Skills: 16](https://img.shields.io/badge/Skills-16-green.svg)](#скиллы)
 [![Agents: 5](https://img.shields.io/badge/Agents-5-orange.svg)](#субагенты)
-[![Version: 1.4.1](https://img.shields.io/badge/Version-1.4.1-purple.svg)](.claude-plugin/plugin.json)
+[![Version: 1.5.0](https://img.shields.io/badge/Version-1.5.0-purple.svg)](.claude-plugin/plugin.json)
 [![Status: Stable](https://img.shields.io/badge/Status-Stable-brightgreen.svg)](CHANGELOG.md)
 [![Type: Claude Code Plugin](https://img.shields.io/badge/Type-Claude%20Code%20Plugin-blueviolet.svg)](.claude-plugin/plugin.json)
 
@@ -311,10 +311,12 @@ chmod +x ~/.claude/hooks/*.sh
 Затем добавьте блок `hooks` в `~/.claude/settings.json` — полные инструкции, сниппет settings.json и пайп-тесты в [`hooks/README.md`](hooks/README.md).
 
 После установки:
-- `check-skills.sh` (UserPromptSubmit) сканирует каждый промпт на ~80 русских/английских триггеров и инжектит напоминание `[SKILL HINT]`, если скилл подходит.
-- `check-tool-skill.sh` (PreToolUse на Bash/Edit/Write/NotebookEdit) инжектит напоминание `[SKILL CHECK]` перед сырыми tool calls.
+- `check-skills.sh` (UserPromptSubmit) сканирует каждый промпт на ~80 русских/английских триггеров и инжектит напоминание `[SKILL HINT]`, если скилл подходит. **Мягкое напоминание — не блокирует.**
+- `check-tool-skill.sh` (PreToolUse на Bash/Edit/Write/NotebookEdit) инжектит напоминание `[SKILL CHECK]` перед сырыми tool calls. **Мягкое напоминание — не блокирует.**
+- **`check-skill-completeness.sh` (v1.5.0, PostToolUse на Write/Edit/MultiEdit)** — после любой правки `skills/*/SKILL.md` внутри методологического репозитория проверяет наличие `references/`, триггеров в промпт-хуке и регрессионного фикстура. **Жёсткий блок (exit 2, decision:block) — ход не продолжится, пока пробел не закрыт.**
+- **`check-commit-completeness.sh` (v1.5.0, PreToolUse на Bash)** — перед любым `git commit` внутри методологического репозитория парсит staged diff и отказывает в коммите, если staged файл скилла без поддерживающих артефактов. **Жёсткий блок (exit 2, decision:deny) — коммит не запустится.**
 
-Оба хука срабатывают сразу — перезапуск Claude Code не нужен.
+Все четыре хука срабатывают сразу — перезапуск Claude Code не нужен. Два v1.5.0 enforcement-хука активны только внутри методологического репозитория (детект через `.claude-plugin/plugin.json`); на сторонних проектах это no-op.
 
 > **Почему это важно:** в ретроспективе продакшен-инцидента 2026-04-07 Claude Code (Opus 4.6) потратил ~2 часа на прямую работу через SSH/sed/curl для починки auth-аутриджа. `/debug` был бы правильным инструментом. Его никто не вызвал — ничто не заставило. Эти хуки — ответ. Полный кейс-стади в `hooks/README.md`.
 

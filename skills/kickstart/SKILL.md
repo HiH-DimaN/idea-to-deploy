@@ -34,6 +34,33 @@ Set via `/model {model}` before invoking this skill, or via the project's defaul
 
 ## Instructions
 
+### Phase -2: Detect self-hosted context (v1.5.0)
+
+Before anything else, check whether the current working directory is **the idea-to-deploy methodology repository itself** or a close fork of it. Signals:
+
+1. `.claude-plugin/plugin.json` exists AND its `name` field equals `idea-to-deploy` OR its `description` field contains the phrase "methodology" + "skills" + "subagents".
+2. `skills/` directory contains 10+ subdirectories, each with a `SKILL.md` file.
+3. `hooks/check-skills.sh` exists.
+4. `CHANGELOG.md` exists and follows Keep-a-Changelog format.
+
+If **3 or more signals** are true → the task is "methodology is extending itself" — **enter strict self-hosted mode**.
+
+**Strict self-hosted mode rules:**
+
+- **Gate 1 CANNOT be skipped.** Even if the user provides a complete spec in `$ARGUMENTS`, `/review --self` MUST run after Phase 3 and before any commit. The "spec is complete" shortcut is forbidden in self-hosted mode.
+- **Gate 2 CANNOT be skipped.** After every new or modified `skills/*/SKILL.md`, the skill MUST:
+  1. Create the matching `skills/<name>/references/` content (if the SKILL.md body references it).
+  2. Update `hooks/check-skills.sh` with trigger phrases.
+  3. Create at least one `tests/fixtures/fixture-*-<name>/` fixture with `idea.md`, `expected-files.txt`, `notes.md`.
+  The `check-skill-completeness.sh` PostToolUse hook will block the session if any of these are missing — this is a feature, not a bug.
+- **Commit gate is active.** The `check-commit-completeness.sh` PreToolUse hook will block `git commit` if staged changes touch `skills/<name>/SKILL.md` without the corresponding references/hook/fixture changes. Do NOT attempt to bypass it with `--no-verify` or `core.hooksPath=/dev/null` — that's the exact shortcut the v1.4.0 incident was about.
+- **CHANGELOG is mandatory.** A new `[X.Y.Z]` entry in `CHANGELOG.md` must exist before the final commit. No silent releases.
+- **Version bump is mandatory.** `plugin.json` version and both README badges must be bumped atomically with the release commit.
+
+Announce entry into strict mode: "🔒 Self-hosted mode detected — Gates 1 and 2 are mandatory, commit hook is active, CHANGELOG + version bump required."
+
+If the user explicitly asks to bypass strict mode (e.g., "just commit, I know what I'm doing"), REFUSE and cite the v1.4.0 incident. The whole point of this phase is that the user — or the assistant — cannot argue their way out of the gates once inside the methodology repo. The one legitimate escape hatch is to add a `.methodology-self-extend-override` file at repo root with a written justification; the hook will then allow the commit with a warning.
+
 ### Phase -1: Detect model and select mode (Lite vs Full)
 
 Before starting, determine which mode to use:

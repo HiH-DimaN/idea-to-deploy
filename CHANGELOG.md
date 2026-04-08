@@ -7,6 +7,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.5.0] — 2026-04-08
+
+Minor release. Closes the two open process gaps from the v1.4.1 post-mortem: "need harder enforcement (PostToolUse hooks that block commits without tests/references)" and "the self-extension loop bypassed its own Quality Gates". v1.5.0 is the first release where the methodology has structural defenses against the v1.4.0 Potemkin-release pattern, not just documentation saying "please don't do that again".
+
+### Added
+
+- **`hooks/check-skill-completeness.sh`** — PostToolUse hook on `Write|Edit|MultiEdit`. After any modification to `skills/<name>/SKILL.md` inside a methodology repo (detected by walking up to find `.claude-plugin/plugin.json`), the hook verifies three invariants: (1) if the SKILL.md body references `references/`, the folder exists and is non-empty; (2) if the skill does not declare `disable-model-invocation: true`, `hooks/check-skills.sh` contains a mention of `/<name>`; (3) at least one `tests/fixtures/fixture-*-<name>*/` directory exists. Any failure emits `decision: block` with exit code 2 — Claude Code treats this as a hard stop, the turn cannot progress until the gap is closed. Outside a methodology repo, the hook is a no-op.
+
+- **`hooks/check-commit-completeness.sh`** — PreToolUse hook on `Bash`. Matches only commands containing `git commit`. Parses the staged diff via `git diff --cached --name-only`; if any `skills/<name>/SKILL.md` is staged, requires matching `skills/<name>/references/`, `hooks/check-skills.sh`, and `tests/fixtures/fixture-*-<name>*/` changes to also be staged OR to already exist on disk. Any gap emits `decision: deny` with exit code 2 — the `git commit` never runs. The one legitimate escape hatch is a `.methodology-self-extend-override` file at repo root with a written justification. Outside a methodology repo, the hook is a no-op.
+
+- **`/kickstart` Phase -2: self-hosted mode detection** — new phase that runs before model detection (Phase -1). Checks three signals: `.claude-plugin/plugin.json` with methodology-like metadata, `skills/` with 10+ subdirectories, `hooks/check-skills.sh` present. If 3 or more signals are true, the skill enters **strict self-hosted mode**: Gate 1 (`/review --self` after Phase 3) cannot be skipped even if the argument-spec is complete; Gate 2 per-step enforcement is mandatory; the completeness and commit-gate hooks are assumed active; CHANGELOG entry and version bump are mandatory before the final commit. Trying to bypass strict mode is explicitly refused.
+
+- **`/review --self` mode + `skills/review/references/meta-review-checklist.md`** — new rubric applied when `/review` is invoked with `--self` OR when self-hosted repo is auto-detected. The meta-rubric audits the methodology itself rather than a user project: 9 Critical checks (SKILL.md frontmatter completeness, references folder when referenced, triggers in hook for every non-disabled skill, at least one fixture per skill, version consistency across plugin.json/READMEs/CHANGELOG, CHANGELOG entry for current version, README badges match reality, Troubleshooting section present, no staged SKILL.md without supporting artifacts), 8 Important checks (Recommended model section, Examples with ≥ 2 items, allowed-tools declared, Skill Contracts table coverage, Recommended Models table coverage, Call Graph coverage, hook trigger smoke test, CHANGELOG Keep-a-Changelog sections), 4 Nice-to-have checks.
+
+### Changed
+
+- **`skills/kickstart/SKILL.md`** — prepended Phase -2 (self-hosted detection) before the existing Phase -1 (model detection). All existing phases renumbered in relative terms (no code change — the phase headings are unique).
+
+- **`skills/review/SKILL.md`** — prepended Step 0 (mode detection). If `--self` argument or self-hosted repo is detected, the skill uses `meta-review-checklist.md` instead of `review-checklist.md`.
+
+- **`hooks/README.md`** — expanded table from 2 to 4 hooks with a new "Blocks?" column. Added pipe-tests for the two new hooks. Added an explicit note that the enforcement hooks are scoped to methodology repos (safe to install globally, no-op elsewhere). Updated the `settings.json` snippet to register all four hooks and added a new `PostToolUse` entry.
+
+- **`README.md` / `README.ru.md`** — version badge bump 1.4.1 → 1.5.0; Recommended Setup section expanded to describe the four hooks and the soft-reminder vs hard-block distinction.
+
+- **`plugin.json`** — version 1.4.1 → 1.5.0; description expanded with "enforcement hooks", "self-hosted mode", "meta-review rubric".
+
+### Philosophy
+
+v1.4.0 shipped a Potemkin release because the self-extension loop bypassed its own Quality Gates. v1.4.1 fixed the artifacts but left the loophole open. v1.5.0 closes the loophole structurally: even if a future version of Claude (or the user) wants to ship a broken release, the commit-gate hook will stop it at `git commit`, and the completeness hook will stop it at `Write`. The only way around is a deliberate, documented override file — which is itself a paper trail.
+
+This is the methodology growing an immune system against its own most likely failure mode. The cost is that methodology-repo work is now slower by construction (you can't ship a half-done skill), but that's the point — the cost *should* be higher inside the methodology than outside, because every skill is a piece of infrastructure that many user projects will depend on.
+
+### Verified manually before release
+
+- Both new hooks pipe-tested outside and inside the methodology repo. Outside → exit 0 (no-op). Inside with a fake incomplete SKILL.md → `decision: block` / `decision: deny`.
+- The existing `check-skills.sh` triggers re-verified: 16/16 representative phrases still match, including the 3 new skill groups from v1.4.0.
+- `/review --self` dry-run against the current repo — the meta-rubric passes all Critical checks. Findings documented in the commit message.
+
+### Not done (deferred to future releases)
+
+- **No CI integration.** The enforcement hooks are user-side. A CI-side equivalent (`.github/workflows/meta-review.yml` that runs the same rubric on every PR) is still open work.
+- **No automatic trigger-phrase generation.** When a new skill is added, the author still writes the regex triggers in `check-skills.sh` manually. A future version could extract them from the SKILL.md body's `## Trigger phrases` section automatically.
+- **Fixture runner still semi-automated.** `tests/run-fixtures.sh` still relies on manual invocation. Full Claude Code SDK integration is gated on SDK maturity, not on this release.
+
+---
+
 ## [1.4.1] — 2026-04-08
 
 Patch release. Closes the gaps caught by the same-day self-audit of v1.4.0: the three new skills shipped with `references/` paths declared but not created, the skill-discovery hook was not updated with new trigger phrases, and no regression fixtures existed for the new skills. v1.4.0 was technically a "release" but functionally a façade — v1.4.1 is the working release.

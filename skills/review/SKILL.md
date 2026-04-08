@@ -37,6 +37,13 @@ Set via `/model {model}` before invoking this skill, or via the project's defaul
 
 ## Instructions
 
+### Step 0: Detect mode (v1.5.0)
+
+Before anything else, check whether `$ARGUMENTS` contains `--self` OR the current working directory is the idea-to-deploy methodology repo (signals: `.claude-plugin/plugin.json` with `name: idea-to-deploy`, `skills/` with 10+ subdirectories, `hooks/check-skills.sh` present).
+
+- **If `--self` OR self-hosted repo detected** → use the meta-review rubric from `references/meta-review-checklist.md` INSTEAD of `review-checklist.md`. The meta-rubric audits the methodology itself: per-skill references, triggers, fixtures, version consistency across plugin.json / README badges / SKILL frontmatter, CHANGELOG presence for the current version, hook completeness. Jump to Step 3 with the meta-rubric.
+- **Otherwise** → proceed to Step 1 below with the standard rubric.
+
 ### Step 1: Detect what to review
 
 Read available project files:

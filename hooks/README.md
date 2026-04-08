@@ -4,12 +4,16 @@ These two hooks turn the methodology from "use it if you remember" into "you lit
 
 ## What they do
 
-| Hook | When it fires | What it does |
-|---|---|---|
-| `check-skills.sh` | Every user prompt (UserPromptSubmit) | Scans the prompt for Russian/English trigger words. If matched, injects a system reminder telling Claude which skill should be invoked first. Silent if no trigger matches. |
-| `check-tool-skill.sh` | Before every Bash/Edit/Write/NotebookEdit (PreToolUse) | Injects a checklist reminder asking Claude to verify a skill doesn't fit before doing raw tool calls. Never blocks — only reminds. |
+| Hook | When it fires | What it does | Blocks? |
+|---|---|---|---|
+| `check-skills.sh` | Every user prompt (UserPromptSubmit) | Scans the prompt for Russian/English trigger words. If matched, injects a system reminder telling Claude which skill should be invoked first. Silent if no trigger matches. | No — soft reminder only |
+| `check-tool-skill.sh` | Before every Bash/Edit/Write/NotebookEdit (PreToolUse) | Injects a checklist reminder asking Claude to verify a skill doesn't fit before doing raw tool calls. | No — soft reminder only |
+| `check-skill-completeness.sh` *(v1.5.0)* | After Write/Edit on `skills/*/SKILL.md` (PostToolUse) | Verifies the skill is structurally complete: `references/` exists if referenced, trigger phrase present in `check-skills.sh`, fixture present in `tests/fixtures/`. | **Yes — exit 2 with decision:block.** Turn stops until the gap is closed. |
+| `check-commit-completeness.sh` *(v1.5.0)* | Before every Bash command matching `git commit` (PreToolUse) | Parses the staged diff. If any `skills/<name>/SKILL.md` is staged, the hook requires matching references/hook/fixture to also be staged (or already present on disk). Written to be the last line of defense against the v1.4.0 "Potemkin release" pattern. | **Yes — exit 2 with decision:deny.** The commit never runs. |
 
-Both hooks are written in Python 3 (works out of the box on macOS/Linux/WSL), depend only on the standard library, and exit silently in degenerate cases (bad JSON, empty payload, etc.) — they never break your session.
+All four hooks are written in Python 3 (works out of the box on macOS/Linux/WSL), depend only on the standard library, and exit silently in degenerate cases (bad JSON, empty payload, not in the methodology repo) — they never break your session on unrelated work.
+
+**Enforcement hooks are scoped to methodology-repo work only.** The two v1.5.0 hooks walk up from `cwd` looking for `.claude-plugin/plugin.json`; if not found, they return 0 immediately. You can safely install them globally and still use Claude Code on ordinary projects — they fire only when you're inside a methodology (or methodology-like) repository.
 
 ## Recommended setup
 
@@ -18,6 +22,8 @@ Both hooks are written in Python 3 (works out of the box on macOS/Linux/WSL), de
 mkdir -p ~/.claude/hooks
 cp hooks/check-skills.sh ~/.claude/hooks/
 cp hooks/check-tool-skill.sh ~/.claude/hooks/
+cp hooks/check-skill-completeness.sh ~/.claude/hooks/   # v1.5.0 enforcement
+cp hooks/check-commit-completeness.sh ~/.claude/hooks/  # v1.5.0 enforcement
 chmod +x ~/.claude/hooks/*.sh
 
 # 2. Register them in ~/.claude/settings.json
@@ -49,11 +55,40 @@ Add this `hooks` block to your `~/.claude/settings.json` (merge with existing se
             "timeout": 5
           }
         ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/check-commit-completeness.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/check-skill-completeness.sh",
+            "timeout": 5
+          }
+        ]
       }
     ]
   }
 }
 ```
+
+**Important — enforcement vs. reminder hooks:**
+
+- `check-skills.sh` and `check-tool-skill.sh` are **soft reminders** (no blocking). Safe to run on all projects.
+- `check-skill-completeness.sh` and `check-commit-completeness.sh` are **hard blocks** (exit 2, decision: deny/block). They only fire inside methodology repos (detected via `.claude-plugin/plugin.json`). Outside the methodology repo they return 0 immediately.
+
+If you never work on methodology repos, the last two hooks are harmless but unused — you can skip registering them.
 
 After saving, the hooks fire on the very next prompt — no restart needed (Claude Code's settings watcher picks them up live).
 
@@ -74,6 +109,27 @@ echo '{"tool_name":"Bash","tool_input":{"command":"ls"}}' | ~/.claude/hooks/chec
 ```
 
 You should see JSON with a SKILL CHECK reminder about Bash.
+
+Pipe-test the completeness hook (v1.5.0) — must be run inside a methodology repo to see the block:
+
+```bash
+cd /path/to/idea-to-deploy
+echo '{"tool_name":"Write","tool_input":{"file_path":"skills/fake-skill/SKILL.md"}}' \
+  | ~/.claude/hooks/check-skill-completeness.sh
+```
+
+You should see JSON with `"decision": "block"` and a list of missing artifacts (references, trigger, fixture).
+
+Pipe-test the commit-gate hook (v1.5.0) — must be inside a methodology repo with a staged SKILL.md:
+
+```bash
+cd /path/to/idea-to-deploy
+# Stage a fake SKILL.md without its supporting files first, then:
+echo '{"tool_name":"Bash","tool_input":{"command":"git commit -m test"}}' \
+  | ~/.claude/hooks/check-commit-completeness.sh
+```
+
+You should see JSON with `"decision": "deny"` explaining which skill is incomplete.
 
 ## Customizing triggers
 
