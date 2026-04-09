@@ -1,6 +1,6 @@
 ---
 name: session-save
-description: 'Save session context to project memory — what was done, key decisions, blockers, next steps. Ensures continuity between Claude Code sessions. TRIGGER when user says "сохрани контекст", "сохрани сессию", "итоги сессии", "save session", "end of session", or signals session end ("на сегодня всё", "заканчиваем"). See `## Trigger phrases` in body for full list.'
+description: 'Save session context to project memory — what was done, decisions, blockers, next steps. Ensures continuity between sessions.'
 argument-hint: (no arguments needed — gathers context automatically)
 license: MIT
 allowed-tools: Read Write Bash Glob Grep

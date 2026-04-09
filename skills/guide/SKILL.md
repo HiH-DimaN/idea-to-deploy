@@ -1,6 +1,6 @@
 ---
 name: guide
-description: 'Generate a CLAUDE_CODE_GUIDE.md — step-by-step copy-paste prompts for building the project from scratch via Claude Code. TRIGGER when user says "создай гайд", "сгенерируй промпты для проекта", "cookbook промптов". Assumes architecture/PRD already exist. See `## Trigger phrases` in body for full list.'
+description: 'Generate CLAUDE_CODE_GUIDE.md — step-by-step copy-paste prompts for building the project via Claude Code.'
 argument-hint: project name or description
 license: MIT
 allowed-tools: Read Write Edit Glob Grep

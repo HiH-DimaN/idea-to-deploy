@@ -1,6 +1,6 @@
 ---
 name: security-audit
-description: 'Audit code for common security vulnerabilities — auth, secrets, injection, CORS/CSP, dependency CVEs, file uploads, error leaks. Read-only checklist + report. TRIGGER when user says "проверь безопасность", "security audit", "найди уязвимости", "проверь auth", "проверь токены", "secrets check", or before launching to production. See `## Trigger phrases` in body for full list.'
+description: 'Audit code for security vulnerabilities — auth, secrets, injection, CORS/CSP, CVEs, file uploads, error leaks. Read-only report.'
 argument-hint: file, directory, or "all" for full project
 license: MIT
 allowed-tools: Read Glob Grep

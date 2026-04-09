@@ -1,6 +1,6 @@
 ---
 name: doc
-description: 'Generate documentation — README, API docs, inline comments. Detects project style and follows existing conventions. TRIGGER when user says "напиши документацию", "создай README", "задокументируй API", "добавь комментарии", or when creating/updating public APIs. Docs are part of "done". See `## Trigger phrases` in body for full list.'
+description: 'Generate documentation — README, API docs, inline comments. Detects project style and follows existing conventions.'
 argument-hint: file, module, or "readme" or "api"
 license: MIT
 allowed-tools: Read Write Edit Glob Grep

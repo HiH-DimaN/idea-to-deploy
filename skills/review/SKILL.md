@@ -1,6 +1,6 @@
 ---
 name: review
-description: 'Validate quality of project documentation and code via deterministic binary rubric. Checks consistency between PRD, architecture, plan, and code. TRIGGER when user says "проверь документацию", "проверь код", "ревью", "review project", or before any commit touching more than 2 files. Returns BLOCKED / PASSED_WITH_WARNINGS / PASSED. See `## Trigger phrases` in body for full list.'
+description: 'Validate project documentation and code via binary rubric. Checks consistency between PRD, architecture, plan, and code.'
 argument-hint: project path or specific document to review
 license: MIT
 allowed-tools: Read Glob Grep

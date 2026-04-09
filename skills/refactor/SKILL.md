@@ -1,6 +1,6 @@
 ---
 name: refactor
-description: 'Refactor code for readability and maintainability while preserving behavior. Uses Fowler-style catalog (Extract Function, Replace Conditional with Polymorphism, etc.). TRIGGER when user says "отрефактори", "упрости код", "перепиши понятнее", "refactor this", or when code has deep nesting/duplication/long functions. No feature changes. See `## Trigger phrases` in body for full list.'
+description: 'Refactor code for readability and maintainability while preserving behavior. Fowler-style catalog. No feature changes.'
 argument-hint: file, function, or area to refactor
 license: MIT
 allowed-tools: Read Edit Glob Grep Bash

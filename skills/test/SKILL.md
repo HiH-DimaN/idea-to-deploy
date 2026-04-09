@@ -1,6 +1,6 @@
 ---
 name: test
-description: 'Generate comprehensive tests — unit, integration, edge cases. Detects project test framework (pytest/vitest/jest/go test) and follows existing conventions. TRIGGER when user says "напиши тесты", "покрой тестами", "добавь тесты", or after writing new code / fixing a bug. Generating a regression test for a fix is part of finishing the fix. See `## Trigger phrases` in body for full list.'
+description: 'Generate comprehensive tests — unit, integration, edge cases. Detects project test framework and follows existing conventions.'
 argument-hint: file, function, or module to test
 license: MIT
 allowed-tools: Read Write Edit Glob Grep Bash

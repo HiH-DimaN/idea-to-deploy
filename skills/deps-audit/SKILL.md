@@ -1,6 +1,6 @@
 ---
 name: deps-audit
-description: 'Audit third-party dependencies for known CVEs, license issues, and abandoned packages. Read-only report with Critical/Important/Recommended/Informational tiers. TRIGGER when user says "проверь зависимости", "dependency audit", "найди уязвимые пакеты", "lockfile audit", "проверь лицензии", "check dependencies", "supply chain audit". See `## Trigger phrases` in body for full list.'
+description: 'Audit third-party dependencies for known CVEs, license issues, and abandoned packages. Read-only report with severity tiers.'
 argument-hint: manifest file, directory, or "all" for full project
 license: MIT
 allowed-tools: Read Glob Grep Bash(npm:*) Bash(pip:*) Bash(cargo:*) Bash(go:*)
