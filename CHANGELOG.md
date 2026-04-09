@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.10.0] — 2026-04-09
+
+Minor release. Adds **`/session-save`** — a new skill that saves session context (what was done, key decisions, blockers, next steps) to the project's memory directory. Ensures continuity between Claude Code sessions: the next session reads the saved context and picks up where the previous one left off.
+
+Also adds a hard rule to CLAUDE.md mandating session context saving at the end of every work session.
+
+### Added
+
+- **`/session-save` skill** (`skills/session-save/SKILL.md`): 5-step workflow — gather git/conversation context, summarize using 9-field checklist, write `session_YYYY-MM-DD.md` to memory directory, update MEMORY.md index, confirm to user.
+- **`references/session-save-checklist.md`**: required fields and quality criteria for session memory files (date, project, branch, summary, decisions, changed files, blockers, next steps, non-obvious context).
+- **Trigger phrases** in `hooks/check-skills.sh`: Russian + English patterns for session save (сохрани контекст, итоги сессии, save session, end of session, etc.).
+- **Regression fixture** `tests/fixtures/fixture-09-session-save/` with idea.md, notes.md, expected-files.txt.
+
+### Changed
+
+- **`plugin.json`** version 1.9.0 → 1.10.0, description updated (16 → 17 skills).
+- **`hooks/check-tool-skill.sh`** — added `/session-save` to the skill reminder list.
+- **`README.md`** — badges (Skills-17, Version-1.10.0), new "Session Management" section, contracts row, call graph entry, recommended models row, contributing count.
+- **`README.ru.md`** — mirror of all README.md changes in Russian.
+- **`CLAUDE.md`** (user project-level) — new hard rule "Сохранение контекста сессии" + `/session-save` added to automatic skills section.
+
+### Why this is a minor release
+
+New skill (`/session-save`) = new functionality = minor version bump per SemVer.
+
+---
+
 ## [1.9.0] — 2026-04-08
 
 Minor release. Adds **M-C12** to the meta-review rubric: structural detection of stale skill-count and agent-count numbers in user-facing documentation prose. Closes the drift class that accumulated silently across v1.4.0 → v1.8.1. The initial M-C12 run caught the last 2 `existing 13` references in Contributing sections that had escaped the v1.8.1 spot-fix.

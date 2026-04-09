@@ -177,7 +177,7 @@ Create these files in order:
 2. **PRD.md** — user stories, requirements (P0/P1/P2), kill criteria
 3. **PROJECT_ARCHITECTURE.md** — stack, DB schema (all tables), API (all endpoints), Docker, auth
 4. **IMPLEMENTATION_PLAN.md** — 8-12 steps with specific files and verification
-5. **CLAUDE.md** — project context, rules, status table
+5. **CLAUDE.md** — project context, rules, status table, session-save rule (обязательно включить правило: «В конце каждой сессии или значимого блока работы — сохранить контекст через /session-save»)
 6. **README.md** — quick start, stack, structure
 7. **CLAUDE_CODE_GUIDE.md** — generate using /guide skill
 

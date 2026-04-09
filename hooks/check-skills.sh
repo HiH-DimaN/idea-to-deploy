@@ -158,6 +158,15 @@ TRIGGERS = [
         r"managed\s+kubernetes|\bdoks\b|\beks\b|\bgke\b)",
         "🔔 Триггер 'infrastructure-as-code' → используй /infra (Terraform/Helm/secrets для DO/AWS/Hetzner/K8s, remote tfstate с локами для prod). Вызови Skill ПЕРВЫМ.",
     ),
+    (
+        r"(сохрани\s+контекст|сохрани\s+сессию|запомни\s+что\s+делали|"
+        r"итоги\s+сессии|конец\s+сессии|закончили\s+работу|"
+        r"на\s+сегодня\s+всё|заканчиваем\s+работу|"
+        r"save\s+session|save\s+context|end\s+of\s+session|"
+        r"wrap\s+up\s+session|session\s+summary)",
+        "🔔 Триггер 'session save' → используй /session-save "
+        "(сохранение контекста сессии в память проекта). Вызови Skill ПЕРВЫМ.",
+    ),
 ]
 
 

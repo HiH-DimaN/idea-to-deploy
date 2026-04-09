@@ -3,16 +3,16 @@
 > Полная методология жизненного цикла проекта для Claude Code — от идеи до задеплоенного продукта одной командой.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Skills: 16](https://img.shields.io/badge/Skills-16-green.svg)](#скиллы)
+[![Skills: 17](https://img.shields.io/badge/Skills-17-green.svg)](#скиллы)
 [![Agents: 5](https://img.shields.io/badge/Agents-5-orange.svg)](#субагенты)
-[![Version: 1.9.0](https://img.shields.io/badge/Version-1.9.0-purple.svg)](.claude-plugin/plugin.json)
+[![Version: 1.10.0](https://img.shields.io/badge/Version-1.10.0-purple.svg)](.claude-plugin/plugin.json)
 [![meta-review](https://github.com/HiH-DimaN/idea-to-deploy/actions/workflows/meta-review.yml/badge.svg)](https://github.com/HiH-DimaN/idea-to-deploy/actions/workflows/meta-review.yml)
 [![Status: Stable](https://img.shields.io/badge/Status-Stable-brightgreen.svg)](CHANGELOG.md)
 [![Type: Claude Code Plugin](https://img.shields.io/badge/Type-Claude%20Code%20Plugin-blueviolet.svg)](.claude-plugin/plugin.json)
 
 **[English version (README.md)](README.md)** · **[Changelog](CHANGELOG.md)** · **[Контрибьютинг](CONTRIBUTING.md)** · **[CI](docs/CI.md)**
 
-> Этот репозиторий — **плагин для Claude Code** (см. `.claude-plugin/plugin.json`). Установка регистрирует 16 скиллов и 5 субагентов в вашем окружении Claude Code — это не самостоятельный CLI.
+> Этот репозиторий — **плагин для Claude Code** (см. `.claude-plugin/plugin.json`). Установка регистрирует 17 скиллов и 5 субагентов в вашем окружении Claude Code — это не самостоятельный CLI.
 
 ## Демо
 
@@ -32,7 +32,7 @@ Claude Code мощный, но без инструкций работает ка
 
 ## Решение
 
-**idea-to-deploy** — это методология, а не просто набор инструментов. 16 скиллов + 5 специализированных агентов, которые превращают Claude Code в профессионального разработчика с проверенным конвейером:
+**idea-to-deploy** — это методология, а не просто набор инструментов. 17 скиллов + 5 специализированных агентов, которые превращают Claude Code в профессионального разработчика с проверенным конвейером:
 
 ```
 Идея → Вопросы → План → Архитектура → Код → Тесты → Ревью → Деплой
@@ -209,6 +209,12 @@ Claude: Шаг 1/9 — скаффолд проекта, коммит
 | `/harden` | **Новое в v1.4.0.** Рубрика production-readiness — health checks, graceful shutdown, structured logging, rate limiting, Prometheus/Grafana, backup strategy, k6 нагрузочные тесты, SRE runbook. Генерирует недостающие артефакты с согласия пользователя. |
 | `/infra` | **Новое в v1.4.0.** Генератор infrastructure-as-code — Terraform модули (DigitalOcean, AWS, Hetzner), Kubernetes-манифесты + Helm chart, обвязка секретов (Vault, AWS Secrets Manager, Doppler, Sealed Secrets). Для прода требует remote tfstate с локами. |
 
+### Управление сессиями (1 скилл, новое в v1.10.0)
+
+| Скилл | Описание |
+|-------|----------|
+| `/session-save` | Сохранение контекста сессии в память проекта — что сделано, ключевые решения, блокеры, следующие шаги. Обеспечивает непрерывность между сессиями Claude Code. |
+
 ## Субагенты
 
 Тяжёлые скиллы запускаются в изолированном контексте со специализированными агентами для лучшего качества:
@@ -245,6 +251,7 @@ Claude: Шаг 1/9 — скаффолд проекта, коммит
 | `/migrate` | Файл миграции/`next`/сырой SQL | Применённая миграция + файл бэкапа + отчёт с путём отката | Мутация схемы БД, файл бэкапа в /tmp | ⚠️ Отказывается на проде без подтверждения |
 | `/harden` | Сервис/директория/`all` | Отчёт + опциональные сгенерированные артефакты (health route, lifespan, logger, k6 скрипт, runbook) | Только добавление кода с согласия пользователя, без удалений | ⚠️ Генерация артефактов stateful |
 | `/infra` | Preset стека + target (do/aws/hetzner/k8s) | Terraform-модули ИЛИ Helm chart + README с командами деплоя | Новые файлы в `infra/`; не дергает cloud API (со стороны облака — read-only) | ✅ Генерация детерминирована по входу |
+| `/session-save` | Сигнал завершения сессии или явный вызов | `session_YYYY-MM-DD.md` + обновление MEMORY.md | Запись в `~/.claude/projects/` директорию памяти | ✅ Создаёт новый файл каждый раз |
 
 **Как читать таблицу:**
 - **Идемпотентен ✅** — безопасно запускать дважды с одним входом. Результат не меняется.
@@ -293,6 +300,9 @@ Claude: Шаг 1/9 — скаффолд проекта, коммит
 
 /migrate (отдельно)
   └─ отказывается на проде без явного подтверждения пользователя
+
+/session-save (отдельно, без субагента)
+  └─ записывает файл памяти сессии + обновляет индекс MEMORY.md
 
 /debug, /refactor, /explain — листовые скиллы, без вложенных вызовов.
 ```
@@ -414,6 +424,7 @@ chmod +x ~/.claude/hooks/*.sh
 | `/deps-audit` | Sonnet | Sonnet | Парсинг + API-запросы; Opus не даёт прироста точности |
 | `/harden` | Sonnet | Opus | Кросс-слойное рассуждение (код + инфра + наблюдаемость) |
 | `/infra` | Sonnet | Opus | Networking / IAM / секреты — тонкие взаимодействия |
+| `/session-save` | Sonnet | Sonnet | Чтение git log + запись резюме — простая задача |
 
 ## Для кого
 
@@ -482,6 +493,14 @@ By design — см. таблицу [Рекомендуемые модели](#р
 **Методология «забыла» мой проект.**
 Каждый скилл читает `CLAUDE.md` в корне проекта для возобновления. Если вы его удалили или переименовали — запустите `/project` снова и скажите «продолжи проект» — он пере-отсканирует и восстановит состояние из существующих файлов.
 
+**Как методология сохраняет контекст между сессиями?**
+Три механизма работают вместе:
+1. **Скилл `/session-save` (новое в v1.10.0)** — сохраняет контекст сессии (что сделано, ключевые решения, блокеры, следующие шаги) в директорию памяти проекта (`~/.claude/projects/.../memory/`). Claude читает это в начале каждой новой сессии.
+2. **Автосохранение по ходу работы** — Claude автоматически сохраняет контекст после значимых этапов (завершённая фича, баг-фикс, архитектурное решение, переход между фазами `/kickstart`), чтобы при резком закрытии терялся минимум контекста.
+3. **Статус-таблица в `CLAUDE.md`** — `/kickstart` отслеживает какие шаги реализации выполнены, позволяя возобновить работу с нужного места.
+
+**Важно:** при резком закрытии VS Code или терминала последний несохранённый фрагмент может потеряться. Автосохранение минимизирует потери, но для лучшего результата скажите «сохрани сессию» / «save session» перед закрытием. Проекты, созданные через `/kickstart` или `/blueprint`, включают правило session-save в генерируемый `CLAUDE.md` автоматически.
+
 **Где лежат установленные скиллы?**
 `~/.claude/plugins/idea-to-deploy/skills/`. У каждого скилла есть `SKILL.md`, который можно прочитать, чтобы понять его контракт.
 
@@ -493,7 +512,7 @@ By design — см. таблицу [Рекомендуемые модели](#р
 Контрибьюции приветствуются. Проект небольшой, поэтому процесс лёгкий:
 
 1. **Сообщить о баге / предложить скилл** — заведите GitHub issue с конкретным сценарием и ожидаемым поведением.
-2. **Предложить новый скилл** — скиллы живут в `skills/<name>/SKILL.md` и следуют форме существующих 16. Нужны: frontmatter (name, description, triggers, allowed-tools, recommended model), Instructions, Examples, Troubleshooting.
+2. **Предложить новый скилл** — скиллы живут в `skills/<name>/SKILL.md` и следуют форме существующих 17. Нужны: frontmatter (name, description, triggers, allowed-tools, recommended model), Instructions, Examples, Troubleshooting.
 3. **Исправить баг или отполировать скилл** — открывайте PR в `main`. Перед отправкой локально прогоните `tests/run-fixtures.sh`.
 4. **Улучшить документацию** — `README.md` и `README.ru.md` должны оставаться синхронными. Правки в одном требуют правок в другом.
 

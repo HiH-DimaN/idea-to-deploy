@@ -3,16 +3,16 @@
 > Complete project lifecycle methodology for Claude Code — from idea to deployed product in one command.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Skills: 16](https://img.shields.io/badge/Skills-16-green.svg)](#skills)
+[![Skills: 17](https://img.shields.io/badge/Skills-17-green.svg)](#skills)
 [![Agents: 5](https://img.shields.io/badge/Agents-5-orange.svg)](#subagents)
-[![Version: 1.9.0](https://img.shields.io/badge/Version-1.9.0-purple.svg)](.claude-plugin/plugin.json)
+[![Version: 1.10.0](https://img.shields.io/badge/Version-1.10.0-purple.svg)](.claude-plugin/plugin.json)
 [![meta-review](https://github.com/HiH-DimaN/idea-to-deploy/actions/workflows/meta-review.yml/badge.svg)](https://github.com/HiH-DimaN/idea-to-deploy/actions/workflows/meta-review.yml)
 [![Status: Stable](https://img.shields.io/badge/Status-Stable-brightgreen.svg)](CHANGELOG.md)
 [![Type: Claude Code Plugin](https://img.shields.io/badge/Type-Claude%20Code%20Plugin-blueviolet.svg)](.claude-plugin/plugin.json)
 
 **[Русская версия (README.ru.md)](README.ru.md)** · **[Changelog](CHANGELOG.md)** · **[Contributing](CONTRIBUTING.md)** · **[CI](docs/CI.md)**
 
-> This repository is a **Claude Code plugin** (see `.claude-plugin/plugin.json`). Installing it registers 16 skills and 5 subagents into your Claude Code environment — it does not run as a standalone CLI.
+> This repository is a **Claude Code plugin** (see `.claude-plugin/plugin.json`). Installing it registers 17 skills and 5 subagents into your Claude Code environment — it does not run as a standalone CLI.
 
 ## Demo
 
@@ -32,7 +32,7 @@ Claude Code is powerful, but without instructions it works like a builder withou
 
 ## The Solution
 
-**idea-to-deploy** is a methodology, not just a set of tools. 16 skills + 5 specialized agents that turn Claude Code into a professional developer with a proven pipeline:
+**idea-to-deploy** is a methodology, not just a set of tools. 17 skills + 5 specialized agents that turn Claude Code into a professional developer with a proven pipeline:
 
 ```
 Idea → Questions → Plan → Architecture → Code → Tests → Review → Deploy
@@ -61,7 +61,7 @@ After installation, the skills and agents are registered under:
 
 ```
 ~/.claude/plugins/idea-to-deploy/
-  ├── skills/          # 16 skill directories
+  ├── skills/          # 17 skill directories
   ├── agents/          # 5 subagent definitions
   └── hooks/           # optional enforcement hooks (not auto-installed)
 ```
@@ -209,6 +209,12 @@ Claude: Step 1/9 — scaffold project, commit
 | `/harden` | **New in v1.4.0.** Production-readiness hardening rubric — health checks, graceful shutdown, structured logging, rate limiting, Prometheus/Grafana, backup strategy, k6 load tests, SRE runbook. Generates missing artifacts on user approval. |
 | `/infra` | **New in v1.4.0.** Infrastructure-as-code generator — Terraform modules (DigitalOcean, AWS, Hetzner), Kubernetes manifests + Helm chart, secrets wiring (Vault, AWS Secrets Manager, Doppler, Sealed Secrets). Remote tfstate with locking enforced for prod. |
 
+### Session Management (1 skill, new in v1.10.0)
+
+| Skill | Description |
+|-------|-------------|
+| `/session-save` | Save session context to project memory — what was done, key decisions, blockers, next steps. Ensures continuity between Claude Code sessions. |
+
 ## Subagents
 
 Heavy skills run in isolated contexts with specialized agents for better quality:
@@ -245,6 +251,7 @@ Each skill has a documented contract — what it reads, what it writes, what sid
 | `/migrate` | Migration file/`next`/raw SQL | Migration applied + backup file + report with rollback path | DB schema mutation, backup file written to /tmp | ⚠️ Refuses on prod without confirmation |
 | `/harden` | Service/dir/`all` | Hardening report + optional generated artifacts (health route, lifespan, logger, k6 script, runbook) | Code additions only with user approval; no deletions | ⚠️ Artifact generation is stateful |
 | `/infra` | Stack preset + target (do/aws/hetzner/k8s) | Terraform modules OR Helm chart + README with deploy commands | New files under `infra/`; no cloud API calls (read-only from cloud side) | ✅ Generation is deterministic per input |
+| `/session-save` | Session end signal or explicit invocation | `session_YYYY-MM-DD.md` + MEMORY.md update | Writes to `~/.claude/projects/` memory directory | ✅ Creates new file each time |
 
 **Reading the table:**
 - **Idempotent ✅** — safe to run twice on the same input. Output is unchanged.
@@ -293,6 +300,9 @@ Skills can invoke each other. This is the maximum depth and the chains:
 
 /migrate (standalone)
   └─ refuses on production without explicit user confirmation
+
+/session-save (standalone, no subagent)
+  └─ writes session memory file + updates MEMORY.md index
 
 /debug, /refactor, /explain — leaf skills, no nested invocations.
 ```
@@ -414,6 +424,7 @@ As of v1.3.0, the recommended model is also encoded in each skill's body in a `#
 | `/deps-audit` | Sonnet | Sonnet | Parsing + API lookups; Opus doesn't improve accuracy |
 | `/harden` | Sonnet | Opus | Cross-layer reasoning (code + infra + observability) |
 | `/infra` | Sonnet | Opus | Networking / IAM / secrets interactions are subtle |
+| `/session-save` | Sonnet | Sonnet | Reading git log + writing summary — straightforward |
 
 ## Who Is This For
 
@@ -482,6 +493,14 @@ By design — see the [Recommended Models](#recommended-models) table. `/kicksta
 **The methodology "forgot" my project.**
 Each skill reads `CLAUDE.md` at the project root to resume. If you deleted or renamed it, run `/project` again and say "continue the project" — it will re-scan and rebuild state from existing files.
 
+**How does the methodology preserve context between sessions?**
+Three mechanisms work together:
+1. **`/session-save` skill (new in v1.10.0)** — saves session context (what was done, key decisions, blockers, next steps) to the project's memory directory (`~/.claude/projects/.../memory/`). Claude reads this at the start of each new session.
+2. **Auto-save during work** — Claude automatically saves context after significant milestones (completed feature, bug fix, architectural decision, `/kickstart` phase transition) so that even if the session is abruptly closed, minimal context is lost.
+3. **`CLAUDE.md` status table** — `/kickstart` tracks which implementation steps are completed, allowing resumption from the right step.
+
+**Important:** if you close VS Code or the terminal abruptly, the last unsaved fragment may be lost. The auto-save mechanism minimizes this, but for best results say "сохрани сессию" / "save session" before closing. Projects created via `/kickstart` or `/blueprint` include the session-save rule in their generated `CLAUDE.md` automatically.
+
 **Where are my installed skills located?**
 `~/.claude/plugins/idea-to-deploy/skills/`. Each skill has a `SKILL.md` you can read to understand its contract.
 
@@ -493,7 +512,7 @@ Open an issue: [github.com/HiH-DimaN/idea-to-deploy/issues](https://github.com/H
 Contributions are welcome. The project is small enough that process is lightweight:
 
 1. **Report issues / suggest skills** — open a GitHub issue with a concrete scenario and expected behavior.
-2. **Propose a new skill** — skills live under `skills/<name>/SKILL.md` and follow the shape documented in the existing 16. Each needs: frontmatter (name, description, triggers, allowed-tools, recommended model), Instructions, Examples, Troubleshooting.
+2. **Propose a new skill** — skills live under `skills/<name>/SKILL.md` and follow the shape documented in the existing 17. Each needs: frontmatter (name, description, triggers, allowed-tools, recommended model), Instructions, Examples, Troubleshooting.
 3. **Fix a bug or polish a skill** — open a PR against `main`. Run `tests/run-fixtures.sh` locally to sanity-check against fixtures before submitting.
 4. **Improve documentation** — both `README.md` and `README.ru.md` must stay in sync. Updates to one require updates to the other.
 
