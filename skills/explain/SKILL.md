@@ -1,6 +1,6 @@
 ---
 name: explain
-description: 'Explain how code works — architecture, data flow, key decisions. Uses ASCII diagrams and step-by-step walkthroughs. TRIGGER when user says "объясни код", "как это работает", "что делает эта функция", "explain this", or asks any question about how existing code works. For multi-file exploration, use this rather than reading files manually. See `## Trigger phrases` in body for full list.'
+description: 'Explain how code works — architecture, data flow, key decisions. Uses ASCII diagrams and step-by-step walkthroughs.'
 argument-hint: file, function, module, or concept
 license: MIT
 allowed-tools: Read Glob Grep

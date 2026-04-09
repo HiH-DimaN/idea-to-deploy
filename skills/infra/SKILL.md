@@ -1,6 +1,6 @@
 ---
 name: infra
-description: 'Generate infrastructure-as-code — Terraform modules, Kubernetes manifests, Helm charts, secrets management wiring (Vault/AWS Secrets Manager/Doppler). Supports DigitalOcean, AWS, Hetzner, bare-metal K8s. TRIGGER when user says "настрой инфраструктуру", "terraform", "helm chart", "k8s manifests", "generate IaC", "infra as code", "настрой vault", "provision servers". See `## Trigger phrases` in body for full list.'
+description: 'Generate infrastructure-as-code — Terraform, Kubernetes, Helm, secrets management. Supports DigitalOcean, AWS, Hetzner.'
 argument-hint: stack type (fastapi-pg-redis, node-pg, static-frontend) + target (do/aws/hetzner/k8s)
 license: MIT
 allowed-tools: Read Write Edit Glob Grep Bash(terraform:*) Bash(helm:*) Bash(kubectl:*)

@@ -1,6 +1,6 @@
 ---
 name: perf
-description: 'Performance analysis — find bottlenecks and optimize. Covers algorithms, DB queries, memory, I/O, caching. TRIGGER when user says "тормозит", "медленно работает", "оптимизируй", "производительность", or reports slow page loads / high latency / memory issues. Measure first, optimize second. See `## Trigger phrases` in body for full list.'
+description: 'Performance analysis — find bottlenecks and optimize. Covers algorithms, DB queries, memory, I/O, caching. Measure first, optimize second.'
 argument-hint: file, function, or area to analyze
 license: MIT
 allowed-tools: Read Edit Glob Grep Bash

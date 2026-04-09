@@ -1,6 +1,6 @@
 ---
 name: harden
-description: 'Production-readiness hardening checklist — health checks, graceful shutdown, rate limiting, structured logging, monitoring (Prometheus/Grafana), backup strategy, secrets, load test scaffolding, SRE runbook. Binary rubric. TRIGGER when user says "подготовь к продакшену", "production readiness", "harden", "hardening", "готов ли прод", "SRE checklist", "load test setup". See `## Trigger phrases` in body for full list.'
+description: 'Production-readiness hardening — health checks, graceful shutdown, rate limiting, logging, monitoring, backups, secrets, SRE runbook.'
 argument-hint: service name, directory, or "all" for full project
 license: MIT
 allowed-tools: Read Write Edit Glob Grep Bash(docker:*) Bash(curl:*) Bash(k6:*)

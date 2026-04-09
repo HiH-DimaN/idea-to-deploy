@@ -1,6 +1,6 @@
 ---
 name: blueprint
-description: 'Generate complete project documentation set (6 files in Full mode, 4 in Lite) — strategic plan, architecture, implementation plan, PRD, README, Claude Code guide. Planning only, no code. TRIGGER when user says "спланируй проект", "подготовь blueprint", "спроектируй", "только планирование без кода". Code generation belongs to /kickstart, not here. See `## Trigger phrases` in body for full list.'
+description: 'Generate project documentation set (strategic plan, architecture, implementation plan, PRD, README, guide). Planning only, no code.'
 argument-hint: project idea or description
 license: MIT
 allowed-tools: Read Write Edit Glob Grep

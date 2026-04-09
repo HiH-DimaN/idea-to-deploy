@@ -1,6 +1,6 @@
 ---
 name: migrate
-description: 'Safely apply a database migration — backup, apply, verify, rollback path. TRIGGER when user says "накати миграцию", "migrate", "apply migration", "ALTER TABLE", "обнови схему БД", "rollback migration", or before any DDL on production. Refuses on prod without explicit confirmation. See `## Trigger phrases` in body for full list.'
+description: 'Safely apply a database migration — backup, apply, verify, rollback path. Refuses on prod without explicit confirmation.'
 argument-hint: migration file path, "next", or SQL statement
 license: MIT
 allowed-tools: Read Glob Grep Bash(psql:*) Bash(sqlite3:*) Bash(mysql:*) Bash(pg_dump:*) Bash(docker:*)

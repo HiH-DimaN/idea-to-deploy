@@ -1,6 +1,6 @@
 ---
 name: debug
-description: 'Systematically debug an issue — find root cause and fix it. Traces errors through stack traces, logs, git history. TRIGGER when user says "почини баг", "не работает", "ошибка", "крашит", "падает", or pastes any error/stack trace. ALWAYS use this instead of ad-hoc Bash/Read/Grep — even small bugs deserve root-cause analysis. See `## Trigger phrases` in body for full list.'
+description: 'Systematically debug an issue — find root cause and fix it. Traces errors through stack traces, logs, git history.'
 argument-hint: error message, symptom, or issue description
 license: MIT
 allowed-tools: Read Edit Glob Grep Bash

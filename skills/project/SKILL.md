@@ -1,6 +1,6 @@
 ---
 name: project
-description: 'Smart project creation router — single entry point for all "new project from scratch" scenarios. Asks one question and routes to /kickstart, /blueprint, or /guide. TRIGGER when user says "хочу проект", "новый проект", "создай проект". ALWAYS prefer this router over jumping into code or invoking /kickstart directly. See `## Trigger phrases` in body for the full list.'
+description: 'Smart project creation router — routes to /kickstart, /blueprint, or /guide based on user scenario.'
 argument-hint: project idea or description
 license: MIT
 allowed-tools: Read

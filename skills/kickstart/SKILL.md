@@ -1,6 +1,6 @@
 ---
 name: kickstart
-description: 'Generate a complete project from idea — architecture, plans, docs, code, tests, deploy. Full lifecycle, one shot. TRIGGER when user says "создай проект", "новый проект", "запили проект целиком", "от идеи до деплоя". Usually invoked via /project router. See `## Trigger phrases` in body for full list.'
+description: 'Generate a complete project from idea — architecture, plans, docs, code, tests, deploy. Full lifecycle in one shot.'
 argument-hint: project idea or description
 disable-model-invocation: true
 allowed-tools: "Read Write Edit Glob Grep Bash(git:*) Bash(mkdir:*) Bash(npm:*) Bash(pnpm:*) Bash(docker:*) Bash(pytest:*) Bash(go:*) Bash(cargo:*)"
