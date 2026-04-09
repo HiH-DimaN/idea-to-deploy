@@ -23,7 +23,7 @@ def main() -> int:
         "что не подходит ни один скилл из Idea-to-Deploy "
         "(см. ~/projects/.claude/CLAUDE.md). Если подходит /debug, /test, "
         "/refactor, /doc, /review, /explain, /perf, /project, /blueprint, "
-        "/guide — STOP, вызови Skill сначала. Если не подходит — продолжай."
+        "/guide, /session-save — STOP, вызови Skill сначала. Если не подходит — продолжай."
     )
 
     out = {

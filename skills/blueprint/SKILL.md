@@ -106,7 +106,7 @@ Before writing, consult `references/document-templates.md` for the exact structu
 6. **CLAUDE_CODE_GUIDE.md** — готовые промпты для каждого шага (формат /guide)
 
 ### Step 3: Generate CLAUDE.md
-Project memory file with: контекст, правила, стек, структура, статус-таблица шагов.
+Project memory file with: контекст, правила, стек, структура, статус-таблица шагов. Обязательно включить правило: «В конце каждой сессии или значимого блока работы — сохранить контекст через /session-save» (обеспечивает непрерывность между сессиями).
 
 ### Step 4: Generate .gitignore
 Based on the tech stack.
