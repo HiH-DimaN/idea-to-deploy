@@ -2,6 +2,8 @@
 name: code-reviewer
 description: "Specialized agent for cross-document and code validation. Checks consistency between PRD, architecture, implementation plan, and actual code. Use when user says 'проверь код', 'code review', 'ревью', 'проверь PR', 'найди косяки', 'проверь архитектуру', 'оцени качество', 'найди расхождения между документацией и кодом', or before any commit touching more than 2 files. Typically invoked from /review skill, but can be called directly via Agent tool for ad-hoc code review."
 model: sonnet
+effort: high
+maxTurns: 15
 allowed-tools: Read Grep Glob
 ---
 

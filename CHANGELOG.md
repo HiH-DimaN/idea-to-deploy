@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.11.0] — 2026-04-09
+
+Marketplace readiness release. Fixes skill description budget overflow (6 of 17 skills were silently dropped by Claude Code Skill tool), adds missing plugin manifest fields for Anthropic Directory submission, and adds recommended agent configuration fields.
+
+### Fixed
+
+- **Skill descriptions shortened** (360-470 → 116-155 chars) — all 17 skills now fit within Claude Code's default 16K character budget for skill metadata. Previously `deps-audit`, `harden`, `infra`, `migrate`, `security-audit`, and `session-save` were not registered in the Skill tool.
+
+### Changed
+
+- **`plugin.json`** — added `homepage`, `keywords` (10 discovery tags), `author.email`, `author.url`. Version 1.10.0 → 1.11.0. Description trimmed (removed internal details).
+- **All 5 agents** — added `effort` and `maxTurns` frontmatter fields per Anthropic plugin reference.
+- **`README.md`** / **`README.ru.md`** — version badge updated to 1.11.0.
+
+---
+
 ## [1.10.0] — 2026-04-09
 
 Minor release. Adds **`/session-save`** — a new skill that saves session context (what was done, key decisions, blockers, next steps) to the project's memory directory. Ensures continuity between Claude Code sessions: the next session reads the saved context and picks up where the previous one left off.
