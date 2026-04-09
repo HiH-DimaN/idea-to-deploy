@@ -105,6 +105,14 @@ Claude Code will:
 6. Test and review after each step
 7. Deploy
 
+When you're done for the day, just say:
+
+```
+save session
+```
+
+Your session context — decisions, progress, blockers, next steps — will be saved and automatically restored in your next session.
+
 ## How It Works
 
 ```
