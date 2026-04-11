@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.5.0] - 2026-04-11
+## [1.12.0] - 2026-04-11
 
 Methodology hardening release. Closes six systemic gaps surfaced by the NeuroExpert 2026-04-11 parallel-session incident, where two Claude sessions performed the same kong.yml tech-debt refactor in parallel because nothing in the methodology forced a pre-flight check on recent commits and no router existed for daily-work tasks on existing code.
 
