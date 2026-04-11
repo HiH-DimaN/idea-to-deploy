@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.13.1] - 2026-04-11
+
+Patch release that finishes what v1.13.0 started. Closes the 9th gap, discovered immediately after merging v1.13.0: the `sync-to-active.sh` script added in v1.12.0 handles `skills/` and `hooks/` but has no `agents/` handling. That means the v1.13.0 fix to `agents/code-reviewer.md` (methodology-mode Step 0 for the forked subagent) landed in the repo but never propagated to `~/.claude/agents/code-reviewer.md`. The `/review --self` mode was effectively inactive: subagent kept using the stale project-level instructions, would still have produced the "Missing PRD.md" nonsense reports.
+
+Detected by `diff -rq agents/ ~/.claude/agents/` after v1.13.0 sync — all 5 agents differed (not just code-reviewer; they had never been sync'd since the script was written).
+
+### Fixed
+
+- **`scripts/sync-to-active.sh`** — added Step 2.5 (agents/) mirroring Step 2 (hooks/) logic. Copies `agents/*.md` to `~/.claude/agents/` with the same `cmp -s` content-based drift detection as the hooks step. No-op when content matches, idempotent on re-runs. Handles both `--check` (dry-run) and normal mode.
+
+### Changed
+
+- **`.claude-plugin/plugin.json`** — version 1.13.0 → 1.13.1.
+- **`README.md`** / **`README.ru.md`** — version badges 1.13.0 → 1.13.1.
+
+### Migration
+
+```bash
+git pull
+bash scripts/sync-to-active.sh
+```
+
+This now copies all 5 subagent files into `~/.claude/agents/`. Verify with:
+
+```bash
+diff -rq agents/ ~/.claude/agents/   # should be silent (no output)
+```
+
+No claude restart needed — subagent definitions are re-read on every invocation.
+
+### Why a patch-level bump
+
+This change adds no new user-facing capability; it restores the effective activation of v1.13.0 which would otherwise remain dormant. Per SemVer this is a bug fix (PATCH), not a feature (MINOR). The methodology version counter stays at 1.13, which is the correct semantic version for "review skill supports self-mode".
+
+---
+
 ## [1.13.0] - 2026-04-11
 
 Methodology self-review release. Closes the 8th gap surfaced during v1.12.0 review: `/review` skill had Step 0 methodology-mode detection since v1.5.0 (`--self` flag, `.claude-plugin/plugin.json` sniffing), but the `code-reviewer` subagent to which `/review` forks via `agent: code-reviewer` had its own instructions in `agents/code-reviewer.md` that did NOT mention methodology mode. Running `/review` inside the idea-to-deploy repo produced nonsense BLOCKED reports because the subagent searched for `PRD.md`, `STRATEGIC_PLAN.md`, `IMPLEMENTATION_PLAN.md` (project-level documents that don't exist in a methodology repo).

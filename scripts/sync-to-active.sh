@@ -147,6 +147,55 @@ done
 ok "hooks: +$h_added added, ~$h_updated updated, =$h_unchanged unchanged"
 
 # -----------------------------------------------------------------------------
+# Step 2.5: Sync agents/*.md (subagents)
+# -----------------------------------------------------------------------------
+# Gap #9 (v1.13.1): sync-to-active.sh originally copied skills/ and hooks/
+# but NOT agents/, so updates to subagent instructions (e.g. the v1.13.0
+# methodology-mode Step 0 in agents/code-reviewer.md) never propagated to
+# ~/.claude/agents/. That made the v1.13.0 /review fix effectively inactive
+# until a manual copy. This step fixes it symmetrically with Step 2.
+say "Step 2.5/3: agents/"
+mkdir -p "$ACTIVE/agents"
+
+a_added=0
+a_updated=0
+a_unchanged=0
+
+if [ -d "$REPO_ROOT/agents" ]; then
+  for src_agent in "$REPO_ROOT"/agents/*.md; do
+    [ -e "$src_agent" ] || continue
+    name="$(basename "$src_agent")"
+    dst="$ACTIVE/agents/$name"
+
+    if [ ! -f "$dst" ]; then
+      if [ "$DRY_RUN" = "1" ]; then
+        printf "  + would add   %s\n" "$name"
+      else
+        cp "$src_agent" "$dst"
+        printf "  + added       %s\n" "$name"
+      fi
+      a_added=$((a_added + 1))
+      continue
+    fi
+
+    if cmp -s "$src_agent" "$dst"; then
+      a_unchanged=$((a_unchanged + 1))
+      continue
+    fi
+
+    if [ "$DRY_RUN" = "1" ]; then
+      printf "  ~ would sync  %s (content drift)\n" "$name"
+    else
+      cp "$src_agent" "$dst"
+      printf "  ~ updated     %s\n" "$name"
+    fi
+    a_updated=$((a_updated + 1))
+  done
+fi
+
+ok "agents: +$a_added added, ~$a_updated updated, =$a_unchanged unchanged"
+
+# -----------------------------------------------------------------------------
 # Step 3: Patch settings.json "hooks" section
 # -----------------------------------------------------------------------------
 say "Step 3/3: settings.json hooks registration"
