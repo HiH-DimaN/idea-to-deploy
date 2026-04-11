@@ -12,7 +12,7 @@
 
 **[Русская версия (README.ru.md)](README.ru.md)** · **[Changelog](CHANGELOG.md)** · **[Contributing](CONTRIBUTING.md)** · **[CI](docs/CI.md)**
 
-> This repository is a **Claude Code plugin** (see `.claude-plugin/plugin.json`). Installing it registers 17 skills and 5 subagents into your Claude Code environment — it does not run as a standalone CLI.
+> This repository is a **Claude Code plugin** (see `.claude-plugin/plugin.json`). Installing it registers 18 skills and 5 subagents into your Claude Code environment — it does not run as a standalone CLI.
 
 ## Demo
 
@@ -34,7 +34,7 @@ Claude Code is powerful, but without instructions it works like a builder withou
 
 ## The Solution
 
-**idea-to-deploy** is a methodology, not just a set of tools. 17 skills + 5 specialized agents that turn Claude Code into a professional developer with a proven pipeline:
+**idea-to-deploy** is a methodology, not just a set of tools. 18 skills + 5 specialized agents that turn Claude Code into a professional developer with a proven pipeline:
 
 ```
 Idea → Questions → Plan → Architecture → Code → Tests → Review → Deploy
@@ -63,7 +63,7 @@ After installation, the skills and agents are registered under:
 
 ```
 ~/.claude/plugins/idea-to-deploy/
-  ├── skills/          # 17 skill directories
+  ├── skills/          # 18 skill directories
   ├── agents/          # 5 subagent definitions
   └── hooks/           # optional enforcement hooks (not auto-installed)
 ```
