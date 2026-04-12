@@ -46,7 +46,7 @@ assert plugin_version == badge_match.group(1), "Badge drift"
 
 ### Цикл 1: marketplace.json (v1.13.2)
 
-**Что произошло:** После полного аудита Anthropic compliance пользователь заметил, что в `marketplace.json` написано "18 skills + 5 subagents", хотя на тот момент уже было 18 скиллов и 5 субагентов. Но проблема была в другом: marketplace.json был создан вручную и с тех пор ни разу автоматически не проверялся.
+**Что произошло:** После полного аудита Anthropic compliance пользователь заметил, что в `marketplace.json` написано "seventeen skills + five subagents" (устаревшее значение), хотя реальное количество было другим. Но проблема была в другом: marketplace.json был создан вручную и с тех пор ни разу автоматически не проверялся.
 
 **Почему существующие gates не поймали:** M-C7 проверяет бейдж в README. M-C1 проверяет version в plugin.json. Но marketplace.json -- отдельный файл со своей структурой, и ни один gate его не трогал.
 

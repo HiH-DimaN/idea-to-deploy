@@ -36,7 +36,7 @@ CI blocks the PR if any Critical check fails.
 
 But structural checks aren't enough.
 
-v1.13.2: a user said "your marketplace.json description says 18 skills but you have 19."
+v1.13.2: a user said "your marketplace.json description has a stale skill count."
 
 The badge check passed (it checks the badge, not the description). A whole drift class we never tested.
 

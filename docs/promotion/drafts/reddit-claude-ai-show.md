@@ -30,7 +30,7 @@ idea-to-deploy is a Claude Code plugin (installed via `/plugin install HiH-DimaN
 
 ### What makes it different
 
-There are other Claude Code skill collections out there (gstack at 70K stars, BMAD at 44K, claude-code-skills with 136 skills). What we focus on that they do not:
+There are other Claude Code skill collections out there (gstack at 70K stars, BMAD at 44K, claude-code-skills with over a hundred skills). What we focus on that they do not:
 
 **Self-improving methodology.** We have 25+ automated meta-review gates that run on every PR. Each gate catches a specific class of documentation/configuration drift. The interesting part: 5 of those gates were added because a user found a bug that existing gates missed. Each user report produces a new permanent gate.
 
