@@ -33,10 +33,9 @@ Layers 1–3 give fast local feedback. Layer 4 is the server-side last line of d
 | `careful.sh` | Before Bash (PreToolUse) | Detects destructive commands (rm -rf, DROP TABLE, git push --force, git reset --hard, chmod 777, pipe-to-bash) and injects a warning asking Claude to confirm with the user. Activated via `CAREFUL_MODE=1` env var or a state file. | No — soft warning only |
 | `freeze.sh` | Before Edit/Write/NotebookEdit (PreToolUse) | Restricts file modifications to a specific directory scope. Any edit outside the frozen scope triggers a warning. Activated via a state file written by `/freeze <path>`. Deactivated with `/unfreeze`. | No — soft warning only |
 
-**Activation:** These hooks are opt-in per session. They do nothing unless explicitly activated:
-- `/careful` → creates `/tmp/claude-careful-{session}.state` with content "active"
-- `/freeze src/auth` → creates `/tmp/claude-freeze-{session}.state` with content "src/auth"
-- `/unfreeze` → deletes the freeze state file
+**Activation:**
+- **`careful.sh`** — **always active** inside methodology repos (auto-detected via `.claude-plugin/plugin.json`). Outside methodology repos: opt-in via `CAREFUL_MODE=1` env var or state file.
+- **`freeze.sh`** — **automatic** when skills like `/bugfix`, `/refactor`, `/perf` start work (they write the scope to `/tmp/claude-freeze-{session}.state`). Can also be activated manually: `/freeze src/auth`. Deactivate with `/unfreeze` or skill completion.
 
 All seven hooks are written in Python 3 (works out of the box on macOS/Linux/WSL), depend only on the standard library, and exit silently in degenerate cases (bad JSON, empty payload, not in the methodology repo) — they never break your session on unrelated work.
 

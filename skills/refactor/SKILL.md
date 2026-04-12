@@ -34,6 +34,17 @@ Set via `/model {model}` before invoking this skill, or via the project's defaul
 
 ## Instructions
 
+### Step 0: Auto-freeze scope (v1.17.0)
+
+After identifying the target file/directory from $ARGUMENTS, automatically activate scope freeze:
+
+```bash
+# Write freeze state — limits edits to the refactoring target
+echo "/path/to/refactor/directory" > /tmp/claude-freeze-${CLAUDE_SESSION_ID:-default}.state
+```
+
+This prevents accidental edits outside the refactoring scope. The freeze is cleared when the skill completes. If the refactoring legitimately requires changes outside the frozen scope (e.g., updating callers), the freeze hook will warn and ask for confirmation.
+
 ### Step 1: Analyze
 Read the code, understand its purpose and ALL callers/usages.
 
