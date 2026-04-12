@@ -81,6 +81,14 @@ User says: "guide for neuroexpert"
 
 Result: CLAUDE_CODE_GUIDE.md with 12 steps matching existing IMPLEMENTATION_PLAN, each prompt references specific sections of PROJECT_ARCHITECTURE.md.
 
+## Rules
+
+1. Каждый промпт в гайде должен быть copy-pasteable — пользователь копирует текст в Claude Code и получает результат без редактирования промпта
+2. Один промпт = один шаг = один коммит с тестируемым результатом. Не объединяй несколько несвязанных действий в один промпт
+3. Каждый шаг должен заканчиваться командами верификации (`pytest`, `curl`, `npm run build`) — шаг без проверки невалиден
+4. Промпты содержат конкретные значения (имена таблиц, типы полей, эндпоинты), а не абстракции ("создай модель данных")
+5. Не генерируй код внутри промптов — промпт описывает ЧТО сделать, Claude Code сам решает КАК. Исключение: конфиги и .env.example
+
 ## Troubleshooting
 
 ### No PROJECT_ARCHITECTURE.md exists
