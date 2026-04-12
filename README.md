@@ -3,9 +3,9 @@
 > Complete project lifecycle methodology for Claude Code — from idea to deployed product in one command.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Skills: 18](https://img.shields.io/badge/Skills-18-green.svg)](#skills)
-[![Agents: 5](https://img.shields.io/badge/Agents-5-orange.svg)](#subagents)
-[![Version: 1.13.1](https://img.shields.io/badge/Version-1.13.1-purple.svg)](.claude-plugin/plugin.json)
+[![Skills: 19](https://img.shields.io/badge/Skills-19-green.svg)](#skills)
+[![Agents: 6](https://img.shields.io/badge/Agents-6-orange.svg)](#subagents)
+[![Version: 1.17.0](https://img.shields.io/badge/Version-1.17.0-purple.svg)](.claude-plugin/plugin.json)
 [![meta-review](https://github.com/HiH-DimaN/idea-to-deploy/actions/workflows/meta-review.yml/badge.svg)](https://github.com/HiH-DimaN/idea-to-deploy/actions/workflows/meta-review.yml)
 [![Status: Stable](https://img.shields.io/badge/Status-Stable-brightgreen.svg)](CHANGELOG.md)
 [![Type: Claude Code Plugin](https://img.shields.io/badge/Type-Claude%20Code%20Plugin-blueviolet.svg)](.claude-plugin/plugin.json)
