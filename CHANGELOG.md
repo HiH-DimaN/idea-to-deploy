@@ -7,6 +7,74 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.18.1] - 2026-04-13
+
+**Adversarial architecture debates + community feedback.** Implements all 3 community-requested features.
+
+### Added
+
+- **New subagent `devils-advocate`** — adversarial architecture reviewer that challenges decisions, finds weaknesses, proposes alternatives. Red/Blue Team approach applied to design, not just security.
+- **`/blueprint` Step 2.1: Architecture Decision Trees** — generates 2-3 architectural variants (e.g., Monolith vs Clean Architecture vs CQRS) with pros, cons, complexity ratings before choosing.
+- **`/blueprint` Step 2.5: Adversarial Architecture Debate** — after Architect proposes, Devil's Advocate stress-tests the design. Produces ADR (Architecture Decision Record) with challenges and resolutions.
+- **`/blueprint` Step 2.6: SAFe-Inspired Patterns** — Definition of Done in STRATEGIC_PLAN, Architectural Runway + Sprint Boundaries in IMPLEMENTATION_PLAN.
+- **`/session-save` Step 4.7: Auto-sync** — automatically runs `sync-to-active.sh` in methodology repos to prevent skill/agent registration bugs.
+
+### Fixed
+
+- Subagent count drift: 6 → 7 across all docs, READMEs, marketplace.json.
+
+---
+
+## [1.18.0] - 2026-04-12
+
+**GSD competitive analysis + 7 adaptations.** Major feature release inspired by GSD (51K stars) execution engine.
+
+### Added
+
+- **GSD as 6th competitor** in `docs/competitive-analysis.md` with full feature matrix comparison.
+- **New skill `/autopilot`** — auto-pipeline: `/discover` → `/blueprint` → `/kickstart` → `/review` → `/test` with session-save checkpoints between phases. GSD auto mode inspired.
+- **New hook `context-aware.sh`** — warns about long sessions and context rot risk, suggests fresh context strategies (tiered prompt injection pattern from GSD).
+- **New hook `cost-tracker.sh`** — per-session token ledger with budget ceiling, tool call counts by type.
+- **New hook `crash-recovery.sh`** — auto-checkpoint after every N significant tool calls for crash recovery.
+- **New hook `stuck-detection.sh`** — sliding-window detection of repetitive tool calls (same file edited 3+ times, same command retried).
+- **Git isolation reference** (`skills/kickstart/references/git-isolation.md`) — worktree per milestone pattern from GSD.
+- **CI pipeline guide** (`tests/references/ci-pipeline-guide.md`) — tiered CI with budget control and retry logic.
+- **`## Self-validation` in all 20 skills** — domain-specific checklists Claude verifies before presenting output.
+- **Fixture `fixture-12-autopilot`** — snapshot fixture for the new `/autopilot` skill.
+- **Trigger phrases for `/autopilot`** in `hooks/check-skills.sh`.
+
+### Fixed
+
+- `/discover` skill not registered in `~/.claude/skills/` (missing global copy since v1.17.0).
+- `business-analyst` agent not registered in `~/.claude/agents/`.
+- Skill count drift: 19 → 20 across all docs, READMEs, marketplace.json, content drafts.
+- Hook count drift: 7 → 11 across READMEs.
+- Syntax error in `hooks/check-skills.sh` (duplicate opening parenthesis).
+
+---
+
+## [1.17.2] - 2026-04-12
+
+**Anthropic compliance: ## Rules in all skills.**
+
+### Added
+
+- `## Rules` section added to 10 skills that were missing it (Anthropic compliance requirement).
+- All 19/19 skills now have Rules section (was 9/19).
+
+---
+
+## [1.17.1] - 2026-04-12
+
+**Automatic safety guardrails.**
+
+### Changed
+
+- `careful.sh` hook now **always active** inside methodology repos (auto-detected via `.claude-plugin/plugin.json`). Outside repos: opt-in via `CAREFUL_MODE=1`.
+- `freeze.sh` hook auto-scoped to methodology repo directories.
+
+---
+
 ## [1.17.0] - 2026-04-12
 
 **Competitive adaptations release.** Closes the two highest-priority gaps identified in `docs/competitive-analysis.md`: product discovery (vs BMAD) and safety guardrails (vs gstack).
