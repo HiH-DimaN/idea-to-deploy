@@ -6,8 +6,14 @@ When active, restricts file modifications (Edit/Write/NotebookEdit) to
 a specific directory scope. Any attempt to modify files outside the
 frozen scope triggers a warning asking Claude to confirm with the user.
 
-Activation: user says "/freeze src/auth" → creates a state file with
-the allowed scope. Deactivated with "/unfreeze".
+Activation (two modes):
+1. Manual: user says "/freeze src/auth" → creates a state file
+2. Automatic (v1.17.0): skills like /bugfix, /refactor, /perf write
+   the freeze state file when they determine the target scope. The
+   skill writes to /tmp/claude-freeze-{session}.state before starting
+   work, and clears it on completion.
+
+Deactivated with "/unfreeze" or when the skill completes.
 
 State: /tmp/claude-freeze-{session}.state contains the allowed path
 prefix (e.g., "src/auth"). If empty or missing, freeze is inactive.

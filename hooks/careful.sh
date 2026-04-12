@@ -11,11 +11,10 @@ Does NOT block (exit 0, permissionDecision: allow) — it's a
 soft guardrail that adds friction, not a hard gate. The user
 can disable it by removing the hook from settings.json.
 
-Activation: set CAREFUL_MODE=1 env var, or the user says /careful
-in the session. The hook checks for a state file to persist
-activation across tool calls within a session.
-
-When NOT active: silent no-op (exit 0, no output).
+v1.17.0: Always active inside methodology repos (detected via
+.claude-plugin/plugin.json). No opt-in needed — safety is automatic.
+Outside methodology repos: opt-in via CAREFUL_MODE=1 env var or
+state file (backward-compatible with manual activation).
 
 Reads JSON on stdin: {"tool_name": "Bash", "tool_input": {"command": "..."}}
 """
@@ -62,8 +61,34 @@ def session_id() -> str:
         return "default"
 
 
+def find_methodology_repo() -> bool:
+    """Return True if cwd is inside a methodology repo."""
+    cwd = os.path.abspath(os.getcwd())
+    for parent in [cwd] + list(_parents(cwd)):
+        if os.path.isfile(os.path.join(parent, ".claude-plugin", "plugin.json")):
+            return True
+    return False
+
+
+def _parents(path: str):
+    """Yield parent directories up to root."""
+    while True:
+        parent = os.path.dirname(path)
+        if parent == path:
+            break
+        yield parent
+        path = parent
+
+
 def is_active() -> bool:
-    """Check if /careful mode is active for this session."""
+    """Check if /careful mode is active for this session.
+
+    Always active inside methodology repos (auto-detected).
+    Outside: opt-in via env var or state file.
+    """
+    # Auto-active inside methodology repos
+    if find_methodology_repo():
+        return True
     # Check env var
     if os.environ.get("CAREFUL_MODE") == "1":
         return True

@@ -36,6 +36,17 @@ Set via `/model {model}` before invoking this skill, or via the project's defaul
 
 ## Instructions
 
+### Step 0: Auto-freeze scope (v1.17.0)
+
+After identifying the target file/directory from $ARGUMENTS or profiling results, automatically activate scope freeze:
+
+```bash
+# Write freeze state — limits edits to the optimization target
+echo "/path/to/perf/directory" > /tmp/claude-freeze-${CLAUDE_SESSION_ID:-default}.state
+```
+
+This prevents accidental edits outside the performance optimization scope. The freeze is cleared when the skill completes. If the optimization legitimately requires changes outside the frozen scope (e.g., adding a database index migration), the freeze hook will warn and ask for confirmation.
+
 ### Step 1: Profile
 Identify what exactly is slow. Read the code and look for:
 

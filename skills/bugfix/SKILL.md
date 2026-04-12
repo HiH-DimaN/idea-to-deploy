@@ -42,6 +42,17 @@ Set via `/model {model}` before invoking this skill, or via the project's defaul
 
 ## Instructions
 
+### Step 0: Auto-freeze scope (v1.17.0)
+
+After identifying the target file/directory from $ARGUMENTS or the error context, automatically activate scope freeze:
+
+```bash
+# Write freeze state — limits edits to the bug's directory
+echo "/path/to/bug/directory" > /tmp/claude-freeze-${CLAUDE_SESSION_ID:-default}.state
+```
+
+This prevents accidental edits outside the bug's scope during debugging. The freeze is cleared automatically when the skill completes (Step 5+). If the fix legitimately requires changes outside the frozen scope (e.g., a shared utility), the freeze hook will warn and ask for confirmation — which is correct behavior.
+
 ### Step 1: Reproduce
 Understand the exact symptoms. Find the error in logs/output.
 
