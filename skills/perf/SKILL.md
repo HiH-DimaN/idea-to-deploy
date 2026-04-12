@@ -104,6 +104,14 @@ Fix: React.lazy() + Suspense for route-level code splitting
 Trade-off: Slight delay on first navigation to each route
 ```
 
+## Rules
+
+1. Measure before optimizing — без baseline-замера (время, количество запросов, размер) оптимизация запрещена. "Кажется медленно" — не метрика
+2. Никаких premature optimizations — оптимизируй только подтверждённые bottleneck'и. Если профилирование не показывает проблему в этом месте, не трогай его
+3. После каждой оптимизации — benchmark "до" и "после" с конкретными числами в отчёте (Step 2 формат обязателен)
+4. Одна оптимизация за раз — не применяй 5 фиксов одновременно, иначе невозможно понять какой дал эффект
+5. Trade-off обязателен — каждая оптимизация имеет цену (память, читаемость, сложность). Явно указывай компромисс в отчёте
+
 ## Troubleshooting
 
 ### Can't reproduce slowness locally
