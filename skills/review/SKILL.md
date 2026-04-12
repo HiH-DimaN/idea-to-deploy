@@ -151,6 +151,14 @@ Architecture says table "clients", implementation plan says "customers", code ha
 Report: Critical issue — inconsistent entity naming across documents.
 Fix: Standardize to one name across all documents.
 
+## Rules
+
+1. Бинарная рубрика — каждый check имеет ровно два состояния: pass или fail. Субъективные оценки ("код неплохой", "архитектура нормальная") запрещены
+2. Каждый finding привязан к конкретному месту: `file:line` для кода, `DOCUMENT.md § Section` для документации. Абстрактные замечания без локации невалидны
+3. Не изобретай собственные критерии — используй только checks из `references/review-checklist.md` (или `references/meta-review-checklist.md` для methodology mode). Дополнительные наблюдения выноси в отдельную секцию, не влияющую на gate status
+4. Gate status детерминирован — одни и те же документы/код всегда дают одинаковый статус. Никогда не понижай BLOCKED до PASSED_WITH_WARNINGS по просьбе пользователя
+5. Score (0-10) — informational only, никогда не используется для gating. Единственный gate — бинарный статус (BLOCKED / PASSED_WITH_WARNINGS / PASSED)
+
 ## Troubleshooting
 
 ### A Critical check fails but the user insists the project is fine
