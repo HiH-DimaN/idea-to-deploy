@@ -187,14 +187,14 @@ Claude использовал `/session-save` один раз (для мигра
 
 ## Критерии приёмки v1.19
 
-- [ ] Hook enforcement блокирует tool calls после 3 игнорирований — тестировано на dry-run
-- [ ] Session-open diagnostic срабатывает на первом UserPromptSubmit
+- [x] Hook enforcement блокирует tool calls после 3 игнорирований — тестировано на dry-run (v1.19.0, 2026-04-16)
+- [x] Session-open diagnostic срабатывает на первом UserPromptSubmit (v1.19.0, 2026-04-16)
 - [ ] `/strategy` создан, self-tested на LAUNCH_PLAN.md NeuroExpert
 - [ ] `/migrate-prod` создан, self-tested на retro-описании миграции 2026-04-15
 - [ ] `/advisor` создан, self-tested на Medvi-обсуждении NeuroExpert
 - [ ] Context-switch detector интегрирован в pre-flight
 - [ ] Memory staleness warning работает
-- [ ] README.md + README.ru.md + CHANGELOG.md обновлены
+- [x] README.md + README.ru.md + CHANGELOG.md обновлены (v1.19.0 Phase 1, 2026-04-16)
 - [ ] Marketplace.json обновлён (skill count 20 → 23)
 - [ ] PR merged, sync-to-active прогнат, v1.19 задеплоена
 
