@@ -2,10 +2,18 @@
 
 > Полная методология жизненного цикла проекта для Claude Code — от идеи до задеплоенного продукта одной командой.
 
+**Установка за 30 секунд:**
+
+```bash
+/plugin install HiH-DimaN/idea-to-deploy
+```
+
+Затем просто опишите задачу в Claude Code — методология сама направит в нужный скилл. [Полный гайд по установке](#быстрый-старт) · [End-to-End пример](#end-to-end-пример) · [Контракты скиллов](#контракты-скиллов).
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Skills: 24](https://img.shields.io/badge/Skills-24-green.svg)](#скиллы)
 [![Agents: 7](https://img.shields.io/badge/Agents-7-orange.svg)](#субагенты)
-[![Version: 1.19.1](https://img.shields.io/badge/Version-1.19.1-purple.svg)](.claude-plugin/plugin.json)
+[![Version: 1.19.2](https://img.shields.io/badge/Version-1.19.2-purple.svg)](.claude-plugin/plugin.json)
 [![meta-review](https://github.com/HiH-DimaN/idea-to-deploy/actions/workflows/meta-review.yml/badge.svg)](https://github.com/HiH-DimaN/idea-to-deploy/actions/workflows/meta-review.yml)
 [![Status: Stable](https://img.shields.io/badge/Status-Stable-brightgreen.svg)](CHANGELOG.md)
 [![Type: Claude Code Plugin](https://img.shields.io/badge/Type-Claude%20Code%20Plugin-blueviolet.svg)](.claude-plugin/plugin.json)
@@ -339,21 +347,32 @@ Claude: Шаг 1/9 — скаффолд проекта, коммит
 
 > **Важно:** хуки — это **опциональный отдельный шаг**. `/plugin install` регистрирует скиллы и агентов, но намеренно **не** пишет в `~/.claude/settings.json` и не ставит глобальные хуки — это остаётся явным решением пользователя. Если пропустить эту секцию, методология всё равно работает; хуки лишь повышают частоту срабатывания скиллов на неоднозначных промптах.
 
-Методология работает только если Claude реально вызывает скиллы. Совпадения триггеров в `description` необходимы, но недостаточны — под давлением или на неоднозначных промптах Claude может скатиться в ad-hoc tool calls. Папка `hooks/` содержит **одиннадцать хуков**, закрывающих этот пробел (два мягких напоминания, два жёстких enforcement-гейта, один pre-flight загрузчик контекста и два опциональных safety-хука):
+Методология работает только если Claude реально вызывает скиллы. Совпадения триггеров в `description` необходимы, но недостаточны — под давлением или на неоднозначных промптах Claude может скатиться в ad-hoc tool calls. Папка `hooks/` содержит **тринадцать хуков**, закрывающих этот пробел (два мягких напоминания, два жёстких enforcement-гейта, один pre-flight загрузчик контекста и два опциональных safety-хука).
+
+**Рекомендуемый способ — одна команда:**
+
+```bash
+git clone https://github.com/HiH-DimaN/idea-to-deploy ~/idea-to-deploy-src
+cd ~/idea-to-deploy-src && bash scripts/sync-to-active.sh
+```
+
+Скрипт копирует все хуки в `~/.claude/hooks/`, патчит `~/.claude/settings.json` для их регистрации и синхронизирует последние определения скиллов/агентов. Идемпотентен — при повторном запуске обновляются только изменённые файлы.
+
+<details>
+<summary>Ручная установка (если хотите видеть каждый шаг)</summary>
 
 ```bash
 mkdir -p ~/.claude/hooks
 cp hooks/check-skills.sh hooks/check-tool-skill.sh hooks/pre-flight-check.sh \
    hooks/check-skill-completeness.sh hooks/check-commit-completeness.sh \
+   hooks/check-review-before-commit.sh hooks/session-open-diagnostic.sh \
    ~/.claude/hooks/
 chmod +x ~/.claude/hooks/*.sh
 ```
 
-Проще — пусть скрипт синхронизации сам скопирует их и пропатчит `settings.json`:
+Затем добавьте блок `hooks` в `~/.claude/settings.json` — полный snippet и pipe-тесты в [`hooks/README.md`](hooks/README.md).
 
-```bash
-bash scripts/sync-to-active.sh
-```
+</details>
 
 Затем добавьте блок `hooks` в `~/.claude/settings.json` (или дайте `sync-to-active.sh` сделать это за вас) — полные инструкции, сниппет settings.json и пайп-тесты в [`hooks/README.md`](hooks/README.md).
 
