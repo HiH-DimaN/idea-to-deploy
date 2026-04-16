@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.20.2] - 2026-04-17
+
+**Follow-up polish release.** Closes the three small follow-up items deferred from v1.20.1: drift-proof M-C12 regex, content correctness in promo drafts, and automatic backup rotation for `sync-to-active.sh`.
+
+### Fixed
+
+- **M-C12 regex now catches Markdown-bold counts.** The old lookbehind `(?<!\S)` refused to match numbers preceded by Markdown inline markers like `**25 скиллов**`, so prose drafts could silently drift. Replaced with `(?<![-A-Za-z0-9])` — admits whitespace, line start, and Markdown markers (`**`, `*`, `_`, backtick) while still blocking hyphenated qualifiers like `depth-3 skills`. Applied to both `skill_direct_re` and `agent_direct_re`.
+- **Competitor-section awareness in M-C12.** Added `in_competitor_section` state tracking. When a heading contains `vs <name>`, `competitor`, `конкурент*`, or `claude-code-skills`, bullets inside that section are skipped — competitors' own skill counts (e.g. `"масштаб (136 скиллов)"`) must not flag as our drift.
+- **`historical_re` expanded** with competitor keywords and demonstrative-bug quoting patterns (`Operations (4 skills)`, quoted past-drift citations in drafts).
+- **`docs/promotion/drafts/hn-headless-claude-poc.md` skill count** — stale `19 skills` → `25 skills` (real drift caught by the new regex).
+
+### Added
+
+- **`sync-to-active.sh` backup rotation** — keeps the 5 most recent `~/.claude/settings.json.bak-*` files, prunes older ones on every sync. Ran routinely, the backups would accumulate without bound otherwise.
+
+### Ops
+
+- Pruned 2 stale backups manually (pre-v1.20.1 era) from the author's install during v1.20.2 prep.
+- Smoke-tested `/adopt` on two real legacy projects (`portfolio-cases`, `site`) — template substitution, marker-based idempotency, and project-level hook registration all verified end-to-end.
+
+---
+
 ## [1.20.1] - 2026-04-17
 
 **10/10 hardening release.** Closes the three remaining gaps from the v1.20.0 retrospective that kept onboarding-readiness, efficiency, and Anthropic-compliance scores below a perfect 10. Drift now auto-detected in CI; destructive operations are explicit-invoke only.
