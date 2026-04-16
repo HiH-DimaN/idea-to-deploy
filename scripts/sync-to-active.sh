@@ -302,6 +302,16 @@ PYEOF
   fi
 fi
 
+# v1.20.1 cleanup: keep the 5 most recent settings.json.bak-* files, delete
+# older ones. `sync-to-active` is run routinely, so these accumulate fast.
+if [ "$DRY_RUN" = "0" ]; then
+  mapfile -t _old_baks < <(ls -1t "$ACTIVE"/settings.json.bak-* 2>/dev/null | tail -n +6)
+  if [ "${#_old_baks[@]}" -gt 0 ]; then
+    rm -f "${_old_baks[@]}"
+    ok "backup cleanup: pruned ${#_old_baks[@]} old settings.json.bak files (kept 5 most recent)"
+  fi
+fi
+
 echo ""
 if [ "$DRY_RUN" = "1" ]; then
   say "DRY RUN complete — re-run without --check to apply"

@@ -308,11 +308,13 @@ def run_rubric(repo: Path) -> Report:
             doc_paths.extend(docs_dir.rglob("*.md"))
 
         # Pattern A: "N skill(s)", "N скилл(ов)", "N skill directories", etc.
-        # `(?<!\S)` requires the number to be preceded by whitespace or start
-        # of line — prevents false positives on hyphenated qualifiers like
-        # "depth-3 skills" where "3" is part of "depth-3", not a count.
+        # The lookbehind `(?<![-A-Za-z0-9])` admits the number after
+        # whitespace, line start, or Markdown inline markers (`**`, `*`,
+        # `_`, backtick) — so bold counts like `**25 скиллов**` are caught
+        # too (v1.20.1 M-C12 fix). It still blocks hyphenated qualifiers
+        # like "depth-3 skills" where `3` is part of `depth-3`, not a count.
         skill_direct_re = re.compile(
-            r"(?<!\S)(\d+)\s+(skills?|skill\s+director\w+|скилл\w*|скилл\w*\s+директор\w+|папк\w*\s+скилл\w+)\b",
+            r"(?<![-A-Za-z0-9])(\d+)\s+(skills?|skill\s+director\w+|скилл\w*|скилл\w*\s+директор\w+|папк\w*\s+скилл\w+)\b",
             re.IGNORECASE,
         )
         # Pattern B: "existing N" / "существующих N" — only counts when the
@@ -321,9 +323,11 @@ def run_rubric(repo: Path) -> Report:
             r"\b(?:existing|current|last)\s+(\d+)\b|\bсуществующ\w+\s+(\d+)\b",
             re.IGNORECASE,
         )
-        # Pattern C: "N agent(s)", "N субагент(ов)", etc. Same hyphen guard.
+        # Pattern C: "N agent(s)", "N субагент(ов)", etc. Same Markdown-aware
+        # lookbehind as Pattern A: admits `**7 агентов**` bold forms while
+        # still guarding against hyphenated qualifiers like "depth-3 agent".
         agent_direct_re = re.compile(
-            r"(?<!\S)(\d+)\s+(agents?|subagents?|агент\w*|субагент\w*)\b",
+            r"(?<![-A-Za-z0-9])(\d+)\s+(agents?|subagents?|агент\w*|субагент\w*)\b",
             re.IGNORECASE,
         )
 
@@ -331,17 +335,36 @@ def run_rubric(repo: Path) -> Report:
         heading_line_re = re.compile(r"^\s*#")
         historical_re = re.compile(
             r"(v\d+\.\d+|at\s+that\s+time|existed\s+at|era\b|legacy\b|initially\b|"
-            r"was\s+enforced|изначально|тогда\s+существов|на\s+момент)",
+            r"was\s+enforced|изначально|тогда\s+существов|на\s+момент|"
+            # Competitor references — other plugins' skill counts are not ours.
+            r"claude-code-skills|конкурент\w*|competitor\w*|"
+            # Demonstrative bug quoting — v1.20.1 M-C12 fix: drafts cite past
+            # drift bugs like "Operations (4 skills) with only 3 table rows",
+            # we must not flag those as current drift.
+            r"Operations\s*\(\d+\s+skills?\)|"
+            r"\"\s*[^\"]*\(\d+\s+skills?\))",
             re.IGNORECASE,
         )
         line_mentions_skill_re = re.compile(r"skill|скилл", re.IGNORECASE)
         line_mentions_agent_re = re.compile(r"agent|агент|субагент", re.IGNORECASE)
+
+        # v1.20.1 M-C12 fix: competitor-comparison sections (e.g. "### vs
+        # claude-code-skills (136 скиллов)") continue for several lines
+        # before the next heading. Every bullet inside such a section is
+        # describing the competitor, not our plugin — flagging them as
+        # drift is a false positive. Track whether we are inside such a
+        # section via the latest heading.
+        competitor_heading_re = re.compile(
+            r"^\s*#{1,6}\s+.*\b(vs\s+\S|competitor\w*|конкурент\w*|claude-code-skills)",
+            re.IGNORECASE,
+        )
 
         for doc in doc_paths:
             if not doc.exists():
                 continue
             rel = doc.relative_to(repo)
             text = doc.read_text(encoding="utf-8", errors="replace")
+            in_competitor_section = False
             for lineno, line in enumerate(text.splitlines(), 1):
                 if table_line_re.match(line):
                     continue
@@ -350,6 +373,11 @@ def run_rubric(repo: Path) -> Report:
                     # like "### Project Creation (3 skills)". M-C12 is for
                     # global-count drift in narrative prose, not for
                     # category counts in headings.
+                    in_competitor_section = bool(competitor_heading_re.match(line))
+                    continue
+                if in_competitor_section:
+                    # Inside a competitor-comparison block every skill/agent
+                    # count refers to the other plugin, not ours.
                     continue
                 if historical_re.search(line):
                     continue
