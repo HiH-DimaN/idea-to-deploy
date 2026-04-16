@@ -1,8 +1,8 @@
 # Hooks — Skill Discovery Enforcement
 
-These eleven hooks turn the methodology from "use it if you remember" into "you literally cannot forget". Without them, even Claude itself will skip the methodology under time pressure (verified the hard way during a 2026-04-07 production incident — see [the case study](#case-study) below).
+These thirteen hooks turn the methodology from "use it if you remember" into "you literally cannot forget". Without them, even Claude itself will skip the methodology under time pressure (verified the hard way during a 2026-04-07 production incident — see [the case study](#case-study) below).
 
-## Defense-in-depth overview (v1.16.2)
+## Defense-in-depth overview (v1.19.0)
 
 Quality enforcement now spans **five layers**, from earliest-feedback to latest. Each layer catches something the previous ones missed:
 
@@ -10,7 +10,7 @@ Quality enforcement now spans **five layers**, from earliest-feedback to latest.
 |---|---|---|---|---|---|
 | 0 | `pre-flight-check.sh` *(v1.5.0)* | Local | UserPromptSubmit | Stale context, parallel session conflicts, missing memory | Soft context injection only |
 | 1 | `check-skills.sh` | Local | UserPromptSubmit | Ambiguous prompts → wrong routing | Soft reminder only |
-| 2 | `check-tool-skill.sh` | Local | PreToolUse on Bash/Edit/Write | Ad-hoc tool calls when a skill fits | Soft reminder only |
+| 2 | `check-tool-skill.sh` *(v1.19.0: enforcement mode)* | Local | PreToolUse on Bash/Edit/Write | Ad-hoc tool calls when a skill fits | **Soft → Hard after 3 ignores** |
 | 3 | `check-skill-completeness.sh` + `check-commit-completeness.sh` | Local | PreToolUse on Write/Edit/MultiEdit, PreToolUse on `git commit` | Incomplete skills (missing references/triggers/fixtures), incomplete commits | Only via `.methodology-self-extend-override` file |
 | 4 | **[CI workflow](../docs/CI.md)** (new in v1.8.0) | GitHub Actions | Push to main, every PR | Everything in the meta-rubric that local hooks missed OR scenarios where local hooks were never installed | Only by admin override of branch protection (audit-logged) |
 
@@ -22,7 +22,8 @@ Layers 1–3 give fast local feedback. Layer 4 is the server-side last line of d
 |---|---|---|---|
 | `pre-flight-check.sh` *(v1.5.0)* | Every user prompt (UserPromptSubmit) | Loads `git log -10`, `git status`, recent commits, and the project memory index (`MEMORY.md`) into Claude's context before each turn. Detects stale parallel-session lockfiles (`.active-session.lock`) and warns if another Claude session has touched this project in the last 10 minutes. | No — soft context injection only |
 | `check-skills.sh` | Every user prompt (UserPromptSubmit) | Scans the prompt for Russian/English trigger words. If matched, injects a system reminder telling Claude which skill should be invoked first. Silent if no trigger matches. | No — soft reminder only |
-| `check-tool-skill.sh` | Before every Bash/Edit/Write/NotebookEdit (PreToolUse) | Injects a checklist reminder asking Claude to verify a skill doesn't fit before doing raw tool calls. Rate-limited to one reminder per 60 seconds per session. | No — soft reminder only |
+| `check-tool-skill.sh` *(v1.19.0: enforcement)* | Before every Bash/Edit/Write/NotebookEdit (PreToolUse) | Rate-limited skill reminder (60s). **Now tracks consecutive ignores.** After 3 ignored reminders, BLOCKS the next tool call until Claude either invokes a Skill or provides a `SKILL_BYPASS: <reason>` justification. Counter resets on Skill call or bypass. | **Yes — after 3 ignores** |
+| `session-open-diagnostic.sh` *(v1.19.0)* | First user prompt of session (UserPromptSubmit) | Reads last `session_*.md`, next-session plan, LAUNCH_PLAN.md, BACKLOG.md, latest ROADMAP. Injects diagnostic context so Claude starts with full awareness of prior work and planned next steps. Fires once per session (sentinel file). | No — soft context injection only |
 | `check-skill-completeness.sh` *(v1.5.1)* | **Before** Write/Edit/MultiEdit on `skills/*/SKILL.md` (PreToolUse) | Parses the pending tool input, extracts the skill name from the file path, verifies that `references/` exists and is non-empty (if the pending content mentions it), that `hooks/check-skills.sh` has a trigger phrase for the skill, and that a matching fixture exists in `tests/fixtures/`. | **Yes — exit 2 with `hookSpecificOutput.permissionDecision: "deny"`.** The Write never runs, the file never lands on disk. |
 | `check-commit-completeness.sh` *(v1.5.1)* | Before every Bash command matching `git commit` (PreToolUse) | Parses the staged diff. If any `skills/<name>/SKILL.md` is staged, the hook requires matching references/hook/fixture to also be staged (or already present on disk). Written to be the last line of defense against the v1.4.0 "Potemkin release" pattern. | **Yes — exit 2 with `hookSpecificOutput.permissionDecision: "deny"`.** The commit never runs. |
 
@@ -52,6 +53,7 @@ cp hooks/check-skill-completeness.sh ~/.claude/hooks/   # v1.5.0 enforcement
 cp hooks/check-commit-completeness.sh ~/.claude/hooks/  # v1.5.0 enforcement
 cp hooks/careful.sh ~/.claude/hooks/                     # v1.17.0 safety guardrail
 cp hooks/freeze.sh ~/.claude/hooks/                      # v1.17.0 scope guardrail
+cp hooks/session-open-diagnostic.sh ~/.claude/hooks/     # v1.19.0 session diagnostic
 chmod +x ~/.claude/hooks/*.sh
 
 # 2. Register them in ~/.claude/settings.json
@@ -65,6 +67,11 @@ Add this `hooks` block to your `~/.claude/settings.json` (merge with existing se
     "UserPromptSubmit": [
       {
         "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/session-open-diagnostic.sh",
+            "timeout": 5
+          },
           {
             "type": "command",
             "command": "~/.claude/hooks/check-skills.sh",

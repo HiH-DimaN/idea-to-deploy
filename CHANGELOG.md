@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.19.0] - 2026-04-16
+
+**Session enforcement + diagnostics (Phase 1).** Closes methodology gaps #4 and #6 from ROADMAP_v1.19.md — discovered during 10+ hour multi-project session where Claude bypassed methodology entirely.
+
+### Added
+
+- **`check-tool-skill.sh` enforcement mode** (Gap #4) — now tracks consecutive ignored skill reminders. After 3 ignores, BLOCKS the next Bash/Edit/Write tool call until Claude either invokes a Skill or provides a `SKILL_BYPASS: <reason>` justification. Counter resets on Skill call or bypass. Prevents the "advisory-only" problem where Claude ignores dozens of reminders.
+- **New hook `session-open-diagnostic.sh`** (Gap #6) — fires once per session on first UserPromptSubmit. Reads last `session_*.md`, next-session plan, LAUNCH_PLAN.md, BACKLOG.md, latest ROADMAP_v*.md. Injects diagnostic context so Claude starts with full awareness of prior work and planned next steps instead of reactive mode.
+
+### Changed
+
+- Hook count: 11 → 13 across docs.
+- Defense-in-depth table version bump to v1.19.0.
+- `check-tool-skill.sh` now shows ignore counter (X/3) in reminders.
+
+---
+
 ## [1.18.1] - 2026-04-13
 
 **Adversarial architecture debates + community feedback.** Implements all 3 community-requested features.

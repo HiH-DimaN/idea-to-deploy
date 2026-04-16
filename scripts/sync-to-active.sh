@@ -228,8 +228,9 @@ DESIRED_HOOKS=$(cat <<'JSON'
   "UserPromptSubmit": [
     {
       "hooks": [
-        { "type": "command", "command": "~/.claude/hooks/pre-flight-check.sh", "timeout": 5 },
-        { "type": "command", "command": "~/.claude/hooks/check-skills.sh",     "timeout": 5 }
+        { "type": "command", "command": "~/.claude/hooks/session-open-diagnostic.sh", "timeout": 5 },
+        { "type": "command", "command": "~/.claude/hooks/pre-flight-check.sh",        "timeout": 5 },
+        { "type": "command", "command": "~/.claude/hooks/check-skills.sh",            "timeout": 5 }
       ]
     }
   ],
