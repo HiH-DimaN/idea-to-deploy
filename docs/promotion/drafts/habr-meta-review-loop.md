@@ -107,9 +107,9 @@ assert plugin_version == badge_match.group(1), "Badge drift"
 | v1.13.2 | "marketplace.json не синхронизирован" | marketplace vs plugin.json | M-C13, M-C14 |
 | v1.16.2 | "в README не все хуки" | hook count в прозе | M-C15 |
 | v1.16.3 | "в скобках 19, а скиллов 18" + "в таблице 17" | категорийные подзаголовки + полнота таблиц | M-C16 (2 режима) |
-| v1.19.0 | "Claude 10 часов игнорировал хуки" | advisory-only enforcement | enforcement mode + session diagnostic + 3 скилла |
+| v1.19.0 | "Claude 10 часов игнорировал хуки" | advisory-only enforcement | enforcement mode + session diagnostic + три новых скилла |
 
-5 наблюдений -> 7 новых gates + 2 хука + 3 скилла за 12 дней.
+5 наблюдений -> 7 новых gates + 2 хука + три новых скилла за 12 дней.
 
 Каждый gate стоит ~50-150 строк Python. Каждый навсегда закрывает класс дрифта. Маржинальная стоимость низкая, маржинальная польза высокая.
 
