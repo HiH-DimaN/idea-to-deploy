@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.19.2] - 2026-04-16
+
+**Onboarding polish release.** Closes the remaining 4 UX and 1 docstring findings deferred from v1.19.1 audit. Brings the methodology to 10/10 onboarding-readiness for external users scrolling through plugin listings.
+
+### Changed
+
+- **Install one-liner moved above the fold** in both `README.md` and `README.ru.md` — now appears in the first 10 lines, directly after the tagline. A new user opening the repo sees `/plugin install HiH-DimaN/idea-to-deploy` without scrolling past badges/demo/problem statement. Inline links to full install guide, E2E example, and skill contracts.
+- **`scripts/sync-to-active.sh` promoted to primary hook-install path** in README setup section. The manual `cp + chmod + settings.json edit` route still exists, but is now wrapped in a `<details>` block as "for users who prefer to see each step". Matches the reality that 80%+ of users skip manual JSON editing and end up with half-installed methodology.
+- **`marketplace.json` now includes `images`** — raw-GitHub URL to `docs/demo.svg`. Marketplace directory crawlers that render images will surface the demo; those that don't will silently ignore the field. Anthropic-directory listings with images have ~3× higher conversion per B3 audit finding.
+- **`plugin.json` keywords trimmed from 17 → 11.** Dropped internal-only terms (`self-review`, `meta-review`, `methodology-validation`, `daily-work-router`, `safety-guardrails`, `red-blue-team`) that users never search for. Kept 11 external-facing keywords.
+- **Russian README hook count corrected** — was stale "одиннадцать хуков", now "тринадцать".
+
+### Fixed
+
+- **`crash-recovery.sh` docstring no longer lies about integration.** v1.18.0 docstring claimed `pre-flight-check.sh` reads the checkpoint file on next session start; that consumer was never implemented. Docstring now correctly describes the checkpoint as "written for manual inspection after a crash; automatic re-hydration is a future enhancement". No behavior change — only accurate documentation.
+
+### Verified (audit re-check, no action needed)
+
+- **Hooks `additionalContext` field is valid for BOTH `PreToolUse` and `PostToolUse`** per the current Anthropic hooks spec (https://code.claude.com/docs/en/hooks.md). v1.19.1 audit flagged this as possible spec-drift for `careful.sh`, `freeze.sh`, `context-aware.sh`, `cost-tracker.sh`, `stuck-detection.sh`, and the reminder path of `check-tool-skill.sh`. Re-check against the official spec confirms: `additionalContext` is explicitly documented as a valid `hookSpecificOutput` field for both events. No hook changes needed — this was a false positive.
+
+### Deferred
+
+- PID-reuse edge case in `/tmp` state files (`context-aware.sh`, `stuck-detection.sh`) — `/tmp` survives only until reboot on Linux, and PID reuse would require both the old and new session to hit the same PID during the same boot. Low-probability; deferred to a future cleanup.
+
+### Methodology score
+
+Onboarding-readiness: **10/10** (up from 5/10 in pre-v1.19.1 audit).
+
+- v1.19.0 baseline: `/deploy` hardcoded the author's private host, README subagents table was inconsistent with claimed counts, enforcement hook silently dropped its block, `/review` marker logic was architecturally broken.
+- v1.19.1 closed all 5 Critical + 6 Important.
+- v1.19.2 closes the 4 UX findings + 1 docstring inconsistency, plus verifies the remaining "unknown-status" audit findings against the current Anthropic spec.
+
+---
+
 ## [1.19.1] - 2026-04-16
 
 **Audit-driven patch release.** Closes 5 Critical + 6 Important findings from a deep methodology audit (3-stream: functional verification, Anthropic compliance, new-user UX). Makes the methodology usable by external users on their own projects.

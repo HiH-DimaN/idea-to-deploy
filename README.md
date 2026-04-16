@@ -2,10 +2,18 @@
 
 > Complete project lifecycle methodology for Claude Code — from idea to deployed product in one command.
 
+**Install in 30 seconds:**
+
+```bash
+/plugin install HiH-DimaN/idea-to-deploy
+```
+
+Then just describe what you want in Claude Code — methodology routes you automatically. [Full install guide](#quick-start) · [End-to-End Example](#end-to-end-example) · [Skill Contracts](#skill-contracts).
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Skills: 24](https://img.shields.io/badge/Skills-24-green.svg)](#skills)
 [![Agents: 7](https://img.shields.io/badge/Agents-7-orange.svg)](#subagents)
-[![Version: 1.19.1](https://img.shields.io/badge/Version-1.19.1-purple.svg)](.claude-plugin/plugin.json)
+[![Version: 1.19.2](https://img.shields.io/badge/Version-1.19.2-purple.svg)](.claude-plugin/plugin.json)
 [![meta-review](https://github.com/HiH-DimaN/idea-to-deploy/actions/workflows/meta-review.yml/badge.svg)](https://github.com/HiH-DimaN/idea-to-deploy/actions/workflows/meta-review.yml)
 [![Status: Stable](https://img.shields.io/badge/Status-Stable-brightgreen.svg)](CHANGELOG.md)
 [![Type: Claude Code Plugin](https://img.shields.io/badge/Type-Claude%20Code%20Plugin-blueviolet.svg)](.claude-plugin/plugin.json)
@@ -339,23 +347,32 @@ Skills can invoke each other. This is the maximum depth and the chains:
 
 > **Note:** hooks are an **optional, separate step**. `/plugin install` registers the skills and agents but deliberately does **not** write to `~/.claude/settings.json` or install global hooks — that remains an explicit user decision. If you skip this section, the methodology still works; the hooks only raise the invocation rate under ambiguous prompts.
 
-The methodology is only effective if Claude actually invokes the skills. Trigger word matching in `description` is necessary but not sufficient — under time pressure or with ambiguous prompts, Claude may default to ad-hoc tool calls. The `hooks/` folder contains **thirteen hooks** that close this gap (two soft reminders, two hard-blocking enforcement gates, one pre-flight context loader, and two optional safety guardrails):
+The methodology is only effective if Claude actually invokes the skills. Trigger word matching in `description` is necessary but not sufficient — under time pressure or with ambiguous prompts, Claude may default to ad-hoc tool calls. The `hooks/` folder contains **thirteen hooks** that close this gap (two soft reminders, two hard-blocking enforcement gates, one pre-flight context loader, and two optional safety guardrails).
+
+**Recommended — one command:**
+
+```bash
+git clone https://github.com/HiH-DimaN/idea-to-deploy ~/idea-to-deploy-src
+cd ~/idea-to-deploy-src && bash scripts/sync-to-active.sh
+```
+
+The script copies all hooks into `~/.claude/hooks/`, patches `~/.claude/settings.json` to register them, and syncs the latest skill/agent definitions. It is idempotent — re-running only updates changed files.
+
+<details>
+<summary>Manual install (for users who prefer to see each step)</summary>
 
 ```bash
 mkdir -p ~/.claude/hooks
 cp hooks/check-skills.sh hooks/check-tool-skill.sh hooks/pre-flight-check.sh \
    hooks/check-skill-completeness.sh hooks/check-commit-completeness.sh \
+   hooks/check-review-before-commit.sh hooks/session-open-diagnostic.sh \
    ~/.claude/hooks/
 chmod +x ~/.claude/hooks/*.sh
 ```
 
-Easier alternative — let the sync script copy them all and patch your `settings.json`:
+Then add the `hooks` block to your `~/.claude/settings.json` — full settings.json snippet and pipe-tests in [`hooks/README.md`](hooks/README.md).
 
-```bash
-bash scripts/sync-to-active.sh
-```
-
-Then add the `hooks` block to your `~/.claude/settings.json` (or let `sync-to-active.sh` do it for you) — full instructions, settings.json snippet, and pipe-tests in [`hooks/README.md`](hooks/README.md).
+</details>
 
 After installation:
 - **`pre-flight-check.sh` (v1.5.0, UserPromptSubmit)** — runs before every user prompt. Loads `git log`, `git status`, and the project memory index (`MEMORY.md`) into Claude's context, and warns if a parallel Claude session has touched the project in the last 10 minutes (via `.active-session.lock`). **Soft context injection — never blocks.** Prevents the v1.13.2 inci­dent class where two parallel sessions independently fixed the same drift.

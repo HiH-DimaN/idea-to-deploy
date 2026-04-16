@@ -16,10 +16,14 @@ The checkpoint is a JSON file with:
   - Timestamp
   - Session goal (if detectable from first prompt)
 
-On next session start, pre-flight-check.sh reads this file and
-injects it as context if the session ended abnormally (no /session-save).
+The checkpoint lives at /tmp/claude-checkpoint-{session_id}.json and
+is meant for manual inspection after a crash — open it to see the last
+N tool calls that ran before the crash. Automatic re-hydration by
+pre-flight-check.sh is a future enhancement (see ROADMAP); today the
+checkpoint is written but not automatically consumed.
 
 v1.18.0: Adaptation from GSD v2 crash recovery.
+v1.19.2: Docstring clarified — no automatic consumer yet.
 
 Reads JSON on stdin: {"tool_name": "...", "tool_input": {...}}
 """
