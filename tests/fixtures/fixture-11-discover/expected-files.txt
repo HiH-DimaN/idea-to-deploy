@@ -1,0 +1,25 @@
+# Expected files after /discover runs
+#
+# /discover produces a single artifact — DISCOVERY.md in the project root.
+# The file feeds /blueprint Step 1.5 which detects DISCOVERY.md and
+# skips its own lightweight MoSCoW prioritization in favor of the
+# deeper discovery output.
+
+DISCOVERY.md
+
+# Required sections inside DISCOVERY.md (validated by expected-snapshot.json):
+#   - Market Analysis (TAM / SAM / SOM)
+#   - Competitor Analysis (at least 3 named competitors, 5 in Full mode)
+#   - User Personas (at least 2, up to 4)
+#   - Value Proposition Canvas
+#   - MoSCoW prioritization (at least 8 features categorized)
+#   - RICE scoring (Full mode only, at least 5 features)
+#
+# The skill MUST NOT produce:
+#   - Code files (.py/.ts/.js) — /discover is analysis only, no scaffolding
+#   - STRATEGIC_PLAN.md / PROJECT_ARCHITECTURE.md — those belong to /blueprint
+#   - CLAUDE.md — bootstrap of project memory belongs to /kickstart or /adopt
+#   - .gitignore — out of scope
+#
+# If /discover writes any of the above, it is a contract violation.
+# Report as a regression.

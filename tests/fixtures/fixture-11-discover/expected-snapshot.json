@@ -1,27 +1,47 @@
 {
-  "$schema_version": "1.0.0",
-  "fixture_type": "snapshot",
+  "$schema_version": "1.0",
+  "fixture_type": "discover-full",
   "skill_under_test": "/discover",
-  "fixture": "fixture-11-discover",
-  "skill": "/discover",
-  "status": "pending",
-  "description": "Product discovery for a SaaS booking platform. Validates DISCOVERY.md generation with TAM/SAM/SOM, competitors, personas, MoSCoW+RICE.",
-  "expected_files": [
-    "DISCOVERY.md"
-  ],
-  "required_sections": [
-    "Market Analysis",
-    "TAM",
-    "SAM",
-    "SOM",
-    "Competitor Analysis",
-    "User Personas",
-    "Value Proposition",
-    "MoSCoW",
-    "RICE"
-  ],
-  "min_competitors": 3,
-  "min_personas": 2,
-  "min_features_moscow": 8,
-  "prompt": "Проведи product discovery для SaaS-платформы онлайн-записи в салоны красоты. Целевая аудитория: владельцы салонов и их клиенты. Монетизация: подписка для салонов."
+  "mode": "full",
+  "status": "active",
+  "description": "Product discovery for a SaaS booking platform in the Russian beauty-salon niche. Validates that /discover produces a DISCOVERY.md with TAM/SAM/SOM, competitor analysis (minimum 3), user personas, MoSCoW + RICE, suitable as input for /blueprint Step 1.5.",
+
+  "files": {
+    "required": [
+      "DISCOVERY.md"
+    ],
+    "optional": [],
+    "min_count": 1
+  },
+
+  "content_contracts": {
+    "DISCOVERY.md": {
+      "required_sections": [
+        "Market Analysis|Анализ рынка|Рынок",
+        "TAM",
+        "SAM",
+        "SOM",
+        "Competitor|Конкурент",
+        "Persona|Персон",
+        "Value Proposition|Ценностное предложение|Value",
+        "MoSCoW",
+        "RICE|Приоритизация|Prioritization"
+      ],
+      "min_length_chars": 2000,
+      "must_contain_any_of": {
+        "booking_domain_terms": ["онлайн-запис", "онлайн запис", "booking", "appointment", "запись"],
+        "beauty_industry_terms": ["салон", "красоты", "beauty", "мастер"],
+        "subscription_monetization": ["подписк", "subscription", "SaaS", "тариф"],
+        "named_competitors": ["YCLIENTS", "Yclients", "Booksy", "Dikidi", "Альтера"],
+        "moscow_must": ["Must", "Must-have"],
+        "moscow_should": ["Should"],
+        "moscow_wont": ["Won't", "Won’t", "Wont"]
+      }
+    }
+  },
+
+  "rubric_status": {
+    "expected": ["PASSED", "PASSED_WITH_WARNINGS"],
+    "forbidden": ["BLOCKED"]
+  }
 }
